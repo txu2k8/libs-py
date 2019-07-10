@@ -1,7 +1,6 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##############################################################################
-#
 #                                                        version: v1.0.0
 #                                                             by: Tao.Xu
 #                                                           date: 11/28/2018
@@ -15,84 +14,73 @@
 # IN THE SOFTWARE.
 ##############################################################################
 
-r""" utils
-"""
-
+"""utils"""
 import os
 import sys
 import re
 import string
-import random
 import base64
-import shutil
-import subprocess
+import random
 import time
 from datetime import date, datetime
+from functools import wraps
 from collections import OrderedDict
 from progressbar import ProgressBar, Percentage, Bar, RotatingMarker, ETA
-import scp
-import xlrd
 import json
-import paramiko
-import pexpect
-import inspect
-import socket
-import hashlib
+import xlrd
+import scp
 import yaml
+import hashlib
+import inspect
+import subprocess
+import paramiko
+import socket
 
 from utils import log
 from utils.retry import retry, retry_call
-
-PY2 = sys.version_info[0] == 2
-if PY2:
-    ENCODING = None
-    string_types = basestring,  # (str, unicode)
-    import ConfigParser as configparser
-    reload(sys)
-    sys.setdefaultencoding('utf-8')
-else:
-    ENCODING = 'utf-8'
-    string_types = str, bytes
-    import configparser
-    from imp import reload
-    reload(sys)
 
 # =============================
 # --- Global Value
 # =============================
 my_logger = log.get_logger()
-
 # --- OS constants
 POSIX = os.name == "posix"
 WINDOWS = os.name == "nt"
-LINUX = sys.platform.startswith("linux")
-OSX = sys.platform.startswith("darwin")
-FREEBSD = sys.platform.startswith("freebsd")
-OPENBSD = sys.platform.startswith("openbsd")
-NETBSD = sys.platform.startswith("netbsd")
-BSD = FREEBSD or OPENBSD or NETBSD
-SUNOS = sys.platform.startswith("sunos") or sys.platform.startswith("solaris")
-AIX = sys.platform.startswith("aix")
 DD_BINARY = os.path.join(os.getcwd(), 'bin\dd\dd.exe') if WINDOWS else 'dd'
 MD5SUM_BINARY = os.path.join(os.getcwd(), 'bin\git\md5sum.exe') if WINDOWS else 'md5sum'
-
-
-class TimeoutError(Exception):
-    pass
+PY2 = sys.version_info[0] == 2
+if PY2:
+    ENCODING = None
+    string_types = basestring,  # (str, unicode)
+    import ConfigParser as configparser
+else:
+    ENCODING = 'utf-8'
+    string_types = str, bytes
+    import configparser
 
 
 def print_for_call(func):
     """
-    Wrapper function.
+    Enter <func>.
+    Exit from <func>. result: "rtn"
     """
 
-    def wrapper_func(*args, **kwargs):
+    @wraps(func)
+    def _wrapped(*args, **kwargs):
         my_logger.info('Enter {name}.'.format(name=func.__name__))
         rtn = func(*args, **kwargs)
         my_logger.info('Exit from {name}. result: {rtn_code}'.format(name=func.__name__, rtn_code=rtn))
         return rtn
 
-    return wrapper_func
+    return _wrapped
+
+
+def base64_encode(original_string):
+    return base64.b64encode(original_string)
+
+
+def base64_decode(encoded_string):
+    return base64.b64decode(encoded_string)
 
 
 def escape(value):
@@ -129,19 +117,39 @@ def escape(value):
     return str(value)
 
 
-def progressbar_k(sleep_time):
+# parameters that apply to all methods
+GLOBAL_PARAMS = ("timeout",)
+
+
+def query_params(*func_query_params):
     """
-    Print a progress bar, total value: sleep_time(seconds)
-    :param sleep_time:
+    Decorator that pops all accepted parameters from method's kwargs and puts
+    them in the params argument.
+    :param func_query_params:
     :return:
     """
 
-    widgets = ['Progress: ', Percentage(), ' ', Bar(marker=RotatingMarker('>-=')), ' ', ETA()]
-    pbar = ProgressBar(widgets=widgets, maxval=sleep_time).start()
-    for i in range(sleep_time):
-        pbar.update(1 * i + 1)
-        time.sleep(1)
-    pbar.finish()
+    def _wrapper(func):
+        @wraps(func)
+        def _wrapped(*args, **kwargs):
+            params = {}
+            if "params" in kwargs:
+                params = kwargs.pop("params").copy()
+            for p in func_query_params + GLOBAL_PARAMS:
+                if p in kwargs:
+                    v = kwargs.pop(p)
+                    if v is not None:
+                        params[p] = escape(v)
+
+            # don't treat ignore and request_timeout as other params to avoid escaping
+            for p in ("ignore", "request_timeout"):
+                if p in kwargs:
+                    params[p] = kwargs.pop(p)
+            return func(*args, params=params, **kwargs)
+
+        return _wrapped
+
+    return _wrapper
 
 
 def get_config_ini(ini_file, section, key):
@@ -258,6 +266,22 @@ def get_config_xls(xls_path, wb_name):
     return row_list
 
 
+def json_load(json_file_path):
+    """
+    Load json files: json.load
+    :param json_file_path:
+    :return:
+    """
+
+    my_logger.log(21, 'Load json {0}'.format(json_file_path))
+    try:
+        with open(json_file_path, 'r') as f:
+            json_info = json.load(f)
+        return json_info
+    except Exception as e:
+        raise Exception('Load json file failed.\n{err}'.format(err=e))
+
+
 def subprocess_popen_cmd(cmd_spec, output=True, timeout=7200):
     """
     Executes command and Returns (rc, output) tuple
@@ -281,19 +305,21 @@ def subprocess_popen_cmd(cmd_spec, output=True, timeout=7200):
                 raise TimeoutError('TimeOutError: {0} seconds'.format(timeout))
             time.sleep(0.1)
 
+        rc = p.returncode
         if output:
             # (stdout, stderr) = p.communicate()
-            (stdout, stderr) = p.stdout.read(), p.stderr.read()
-            (rtn_code, std_out_err) = (p.returncode, stdout.decode('UTF-8', 'ignore')) if p.returncode == 0 else \
-                (p.returncode, stderr.decode('UTF-8', 'ignore'))
-            if rtn_code != 0:
-                my_logger.warning('Output: returncode {r_code}, stdout/stderr:\n{r_out}'.format(r_code=rtn_code, r_out=std_out_err))
+            stdout, stderr = p.stdout.read(), p.stderr.read()
+            if rc == 0:
+                std_out_err = escape(stdout)
+            else:
+                std_out_err = escape(stderr)
+                my_logger.warning('Output: rc={0}, stdout/stderr:\n{1}'.format(rc, std_out_err))
         else:
-            (rtn_code, std_out_err) = (p.returncode, '')
+            std_out_err = ''
         # p.stdout.close()
         # p.stderr.close()
         # p.kill()
-        return rtn_code, std_out_err
+        return rc, std_out_err
     except Exception as e:
         raise Exception('Failed to execute: {0}\n{1}'.format(cmd_spec, e))
 
@@ -339,10 +365,9 @@ def paramiko_ssh_cmd(ip, username, password, cmd_spec, key_file=None, timeout=72
     """
 
     sudo = False if username in ['root', 'support'] else True
-    # if os.name == "posix":
-    #     run_cmd('ssh-keygen -f "/root/.ssh/known_hosts" -R "{0}"'.format(ip))
+    # run_cmd('ssh-keygen -f "/root/.ssh/known_hosts" -R "{0}"'.format(ip))
     ssh = paramiko.SSHClient()
-    ssh.load_system_host_keys()
+    # ssh.load_system_host_keys()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     if docker_image:
@@ -363,7 +388,7 @@ def paramiko_ssh_cmd(ip, username, password, cmd_spec, key_file=None, timeout=72
             stdin, stdout, stderr = ssh.exec_command(cmd_spec, get_pty=get_pty, timeout=360000)
             stdin.write('\n')
             stdin.flush()
-        std_out, std_err = stdout.read().decode('UTF-8', 'ignore'), stderr.read().decode('UTF-8', 'ignore')
+        std_out, std_err = stdout.read(), stderr.read()  # escape(stdout.read()), escape(stderr.read())
         ssh.close()
         return std_out, std_err
     except Exception as e:
@@ -406,298 +431,6 @@ def ssh_cmd(ip, username, password, cmd_spec, expected_rc=0, key_file=None, time
         raise Exception('%s(): Failed command: %s\nMismatched RC: Received [%d], Expected [%d]\nError: %s' % (
             method_name, cmd_spec, rc, expected_rc, output))
     return rc, output
-
-
-def ssh_l_cmd(ip, username, password, cmd_spec):
-    """
-    ssh -l username ip, only support linux VM
-    :param ip:
-    :param username:
-    :param password:
-    :param cmd_spec:
-    :return:
-    """
-
-    ssh_newkey = 'Are you sure you want to continue connecting'
-    child = pexpect.spawn('ssh -l {user} {host} {cmd}'.format(user=username, host=ip, cmd=cmd_spec), encoding=ENCODING)
-    rtn_1 = child.expect([pexpect.TIMEOUT, ssh_newkey, 'password: '])
-    if rtn_1 == 0:  # Timeout
-        raise Exception(child.before + child.after)
-    if rtn_1 == 1:  # SSH does not have the public key. Just accept it.
-        child.sendline('yes')
-        child.expect('password: ')
-        rtn_2 = child.expect([pexpect.TIMEOUT, 'password: '])
-        if rtn_2 == 0:  # Timeout
-            raise Exception(child.before + child.after)
-    child.sendline(password)
-    return child.before
-
-
-@retry(tries=3, delay=3)
-def pexpect_ssh_login(ip, username, password=None, key_file=None, timeout=720):
-    """
-    This runs a command on the remote host. This could also be done with the
-        pxssh class, but this demonstrates what that class does at a simpler level.
-        This returns a pexpect.spawn object. This handles the case when you try to
-        connect to a new host and ssh asks you if you want to accept the public key
-        fingerprint and continue connecting.
-    :param ip:
-    :param username:
-    :param password:
-    :param key_file:
-    :param timeout:
-    :return:
-    """
-
-    prompt = ['# ', '>>> ', '> ', '\$ ']
-    login_expect = ['Are you sure you want to continue connecting', '[P|p]assword: ']
-    login_expect.extend(prompt)
-
-    try:
-        if key_file:
-            login_cmd = 'ssh -i {key} {user}@{host}'.format(key=key_file, user=username, host=ip)
-        else:
-            login_cmd = 'ssh {user}@{host}'.format(user=username, host=ip)
-
-        my_logger.info(login_cmd)
-        child = pexpect.spawn(login_cmd, timeout=timeout, encoding=ENCODING)
-        # child.logfile = sys.stdout
-        ret = child.expect(login_expect)
-        if ret == 0:
-            child.sendline('yes')
-            ret = child.expect(login_expect)
-        if ret == 1:
-            child.sendline(password)
-            ret = child.expect(login_expect)
-        if ret > 1:
-            print('SSH Login success ...')
-            return child
-    except pexpect.EOF as e:
-        raise Exception('[-] Error Connecting, {0}'.format(e))
-    except pexpect.TIMEOUT as e:
-        raise Exception('[-] TimeOut Connecting, {0}'.format(e))
-
-
-def pexpect_ssh_cmd(ip, username, password, cmd_spec, expect_kv_list=None, key_file=None, timeout=720):
-    """
-    This runs a command on the remote host. This could also be done with the
-    pxssh class, but this demonstrates what that class does at a simpler level.
-    This returns a pexpect.spawn object. This handles the case when you try to
-    connect to a new host and ssh asks you if you want to accept the public key
-    fingerprint and continue connecting.
-
-    :param ip:
-    :param username:
-    :param password:
-    :param cmd_spec:
-    :param expect_kv_list: eg: [('input ip', '10.180.119.1'), ('input user', 'root')]
-    :param key_file:
-    :param timeout:
-    :return:
-    """
-
-    prompt = ['# ', '>>> ', '> ', '\$ ']
-    login_expect = ['Are you sure you want to continue connecting', '[P|p]assword: ']
-    login_expect.extend(prompt)
-
-    try:
-        if key_file:
-            login_cmd = 'ssh -i {key} {user}@{host}'.format(key=key_file, user=username, host=ip)
-        else:
-            login_cmd = 'ssh {user}@{host}'.format(user=username, host=ip)
-
-        my_logger.info(login_cmd)
-        child = pexpect.spawn(login_cmd, timeout=timeout, encoding=ENCODING)
-        # child.logfile = sys.stdout
-        ret = child.expect(login_expect)
-        if ret == 0:
-            child.sendline('yes')
-            ret = child.expect(login_expect)
-        if ret == 1:
-            child.sendline(password)
-            ret = child.expect(login_expect)
-        if ret > 1:
-            my_logger.info('SSH Login success ...')
-    except pexpect.EOF as e:
-        raise Exception('[-] Error Connecting, {0}'.format(e))
-    except pexpect.TIMEOUT as e:
-        raise Exception('[-] TimeOut Connecting, {0}'.format(e))
-
-    my_logger.info('Execute:{0}'.format(cmd_spec))
-    child.sendline(cmd_spec)
-    expect_key_list = [expect_key for expect_key, expect_value in expect_kv_list]
-    expect_key_list.extend(prompt)
-    show = False
-    timeout_try = 0
-    buffer_next = child.buffer.strip('\r\n')
-    while child.isalive():
-        try:
-            index = child.expect(expect_key_list, timeout=60)
-            timeout_try = 0
-            buffer_next = child.buffer.strip('\r\n')
-            my_logger.info("{0}{1}".format(child.after, child.buffer))
-            if expect_key_list[index] in prompt:
-                break
-            semd_cmd = expect_kv_list[index][1]
-            my_logger.info("index:{0}, sendline('{1}')".format(index, semd_cmd))
-            child.sendline(str(semd_cmd))
-            # expect_key_list.pop(index)
-            # expect_kv_list.pop(index)
-            show = False
-            if index == len(expect_kv_list) - 1:
-                show = True
-                child.expect(prompt, timeout=30)
-                break
-        except pexpect.EOF:
-            my_logger.debug("{0}".format(child.buffer))
-            my_logger.debug('EOF: sendline('')')
-            child.sendline('')
-        except pexpect.TIMEOUT:
-            timeout_try += 1
-            if timeout_try > 0 and (child.buffer.strip('\r\n') != buffer_next):
-                buffer_next = child.buffer.strip('\r\n')
-                if show:
-                    my_logger.info("{0}".format(child.buffer))
-                    progressbar_k(300)
-                else:
-                    buffer_list = child.buffer.strip('\n').split('\n')
-                    if buffer_list:
-                        my_logger.info("{0}".format(buffer_list[-1]))
-                my_logger.warning('TIMEOUT: sendline('')')
-                child.sendline()
-                show = True
-                try:
-                    child.expect(prompt, timeout=30)
-                    break
-                except Exception as e:
-                    my_logger.debug(e)
-                timeout_try = 0
-            else:
-                time.sleep(10)
-        finally:
-            my_logger.debug('-' * 30)
-            my_logger.debug('buffer: {0}'.format(child.buffer))
-            my_logger.debug('before: {0}'.format(child.before))
-            my_logger.debug('after: {0}'.format(child.after))
-            my_logger.debug('-' * 30)
-    child.close(force=True)
-    return True
-
-
-def centos_enable_root(ip, username='centos', password=None, key_file=None, root_pwd='password'):
-    """
-    enable centos root user and set root password
-    :param ip:
-    :param username:
-    :param password:
-    :param key_file:
-    :param root_pwd:
-    :return:
-    """
-
-    passwd_root = 'sudo passwd root'
-    cmd = 'sed -i s/"PasswordAuthentication no"/"PasswordAuthentication yes"/g /etc/ssh/sshd_config;service sshd restart'
-    child = pexpect_ssh_login(ip, username, password, key_file)
-
-    try:
-        my_logger.info(passwd_root)
-        my_logger.info(root_pwd)
-        child.sendline(passwd_root)
-        child.expect('New password:')
-        child.sendline(root_pwd)
-        child.expect('Retype new password:')
-        child.sendline(root_pwd)
-        child.expect('all authentication tokens updated successfully.')
-        child.sendline('su root')
-        child.expect('Password:')
-        child.sendline(root_pwd)
-        child.expect('root@.*#')
-        my_logger.info(cmd)
-        child.sendline(cmd)
-        child.expect('Redirecting to /bin/systemctl restart sshd.service')
-        child.close(force=True)
-    except pexpect.EOF as e:
-        raise Exception('[-] Error: {0}'.format(e))
-    except pexpect.TIMEOUT as e:
-        raise Exception('[-] TimeOut: {0}'.format(e))
-
-    return True
-
-
-def pexpect_ssh_cli(ip, username, password, cmd_spec, expect_kv_list=None, key_file=None, timeout=720, show=False):
-    """
-    pexpect ssh run cli
-    run cmd -> expect output
-    :param ip:
-    :param username:
-    :param password:
-    :param cmd_spec:
-    :param expect_kv_list: k:cmd, v:output
-    :param key_file:
-    :param timeout:
-    :return:
-    """
-
-    expect_kv_list.append(('exit', 'exit'))
-    prompt = ['~/setup# ', '# ', '>>> ', '> ', '\$ ']
-    child = pexpect_ssh_login(ip, username, password, key_file, timeout)
-
-    my_logger.info('Execute:{0}'.format(cmd_spec))
-    child.sendline(cmd_spec)
-    ret = child.expect(prompt)
-    if ret == 0:
-        my_logger.info('Enter CLI({0}) ...'.format(cmd_spec))
-    else:
-        raise Exception('Execute: {0} failed!'.format(cmd_spec))
-
-    timeout_try = 0
-    buffer_next = child.buffer.strip('\r\n')
-    for cmd, expect in expect_kv_list:
-        my_logger.info("CLI Execute: {0}".format(cmd))
-        my_logger.debug("CLI Expected: {0}".format(expect))
-
-        try:
-            child.sendline(cmd)
-            child.expect([expect], timeout=60)
-            timeout_try = 0
-            buffer_next = child.buffer.strip('\r\n')
-            output_msg = "output:\n{0}".format(child.before + child.after)
-            if show:
-                my_logger.info(output_msg)
-            else:
-                my_logger.debug(output_msg)
-        except pexpect.EOF:
-            my_logger.warning('EOF ...')
-            my_logger.debug("{0}".format(child.buffer))
-        except pexpect.TIMEOUT:
-            timeout_try += 1
-            if timeout_try > 0 and (child.buffer.strip('\r\n') != buffer_next):
-                buffer_next = child.buffer.strip('\r\n')
-                if show:
-                    my_logger.info("{0}".format(child.buffer))
-                    progressbar_k(300)
-                else:
-                    buffer_list = child.buffer.strip('\n').split('\n')
-                    if buffer_list:
-                        my_logger.info("{0}".format(buffer_list[-1]))
-                my_logger.warning('TIMEOUT ...')
-                show = True
-                try:
-                    child.expect(prompt, timeout=30)
-                    break
-                except Exception as e:
-                    my_logger.debug(e)
-                timeout_try = 0
-            else:
-                time.sleep(10)
-        finally:
-            my_logger.debug('-' * 30)
-            my_logger.debug('buffer: {0}'.format(child.buffer))
-            my_logger.debug('before: {0}'.format(child.before))
-            my_logger.debug('after: {0}'.format(child.after))
-            my_logger.debug('-' * 30)
-    child.close(force=True)
-    return True
 
 
 @retry(tries=2, delay=1)
@@ -760,7 +493,7 @@ def remote_scp_put(ip, local_path, remote_path, username, password, key_file=Non
 
     my_logger.info('scp %s %s@%s:%s' % (local_path, username, ip, remote_path))
     ssh = paramiko.SSHClient()
-    ssh.load_system_host_keys()
+    # ssh.load_system_host_keys()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     try:
@@ -806,28 +539,6 @@ def remote_scp_get(ip, local_path, remote_path, username, password, key_file=Non
         obj_scp = scp.SCPClient(ssh.get_transport())
         obj_scp.get(remote_path, local_path)
         ssh.close()
-        return True
-    except Exception as e:
-        raise e
-
-
-@retry(tries=3, delay=1)
-def shutil_copytree(src_path, dest_path):
-    """
-    shutil.copytree(src_path, dest_path)
-    :param src_path:
-    :param dest_path:
-    :return:
-    """
-
-    my_logger.info("shutil.copytree(%s, %s)" % (src_path, dest_path))
-    if os.path.isdir(dest_path):
-        try:
-            shutil.rmtree(dest_path)
-        except OSError as e:
-            raise e
-    try:
-        shutil.copytree(src_path, dest_path)
         return True
     except Exception as e:
         raise e
@@ -893,27 +604,78 @@ def get_remote_hostname(ip, username, password):
         return hostname
 
 
-def get_freebsd_kern_boottime(ip, username, password):
+def progressbar_k(sleep_time):
     """
-    get freebsd kern boot time
-    sysctl kern.boottime
-    :param ip:
-    :param username:
-    :param password:
+    Print a progress bar, total value: sleep_time(seconds)
+    :param sleep_time:
     :return:
     """
 
-    cmd = 'sysctl kern.boottime'
-    kern_boottime = ''
-    try:
-        rc, output = ssh_cmd(ip, username, password, cmd)
-        my_logger.info(output)
-        pattern = re.compile(r'}\s(.+)')
-        kern_boottime = pattern.findall(output.strip('\n'))[0]
-    except Exception as e:
-        my_logger.error(e)
+    widgets = ['Progress: ', Percentage(), ' ', Bar(marker=RotatingMarker('>-=')), ' ', ETA()]
+    pbar = ProgressBar(widgets=widgets, maxval=sleep_time).start()
+    for i in range(sleep_time):
+        pbar.update(1 * i + 1)
+        time.sleep(1)
+    pbar.finish()
 
-    return kern_boottime
+
+def ip_to_num(ip):
+    """
+    convert ip(ipv4) address to a int num
+    :param ip:
+    :return: int num
+    """
+
+    lp = [int(x) for x in ip.split('.')]
+    return lp[0] << 24 | lp[1] << 16 | lp[2] << 8 | lp[3]
+
+
+def num_to_ip(num):
+    """
+    convert int num to ip(ipv4) address
+    :param num:
+    :return:
+    """
+
+    ip = ['', '', '', '']
+    ip[3] = (num & 0xff)
+    ip[2] = (num & 0xff00) >> 8
+    ip[1] = (num & 0xff0000) >> 16
+    ip[0] = (num & 0xff000000) >> 24
+    return '%s.%s.%s.%s' % (ip[0], ip[1], ip[2], ip[3])
+
+
+def strsize_to_size(str_size):
+    """
+    convert str_size such as 1K,1M,1G,1T to size 1024 (byte)
+    :param str_size:such as 1K,1M,1G,1T
+    :return:size (byte)
+    """
+
+    str_size = str(str_size) if not isinstance(str_size, str) else str_size
+
+    if not bool(re.search('[a-z_A-Z]', str_size)):
+        return int(str_size)
+
+    if not bool(re.search('[0-9]', str_size)):
+        raise Exception('Not support string size: {}'.format(str_size))
+
+    regx = re.compile(r'(\d+)\s*([a-z_A-Z]+)', re.I)
+    tmp_size_unit = regx.findall(str_size)[0]
+    tmp_size = int(tmp_size_unit[0])
+    tmp_unit = tmp_size_unit[1]
+    if bool(re.search('K', tmp_unit, re.IGNORECASE)):
+        size_byte = tmp_size * 1024
+    elif bool(re.search('M', tmp_unit, re.IGNORECASE)):
+        size_byte = tmp_size * 1024 * 1024
+    elif bool(re.search('G', tmp_unit, re.IGNORECASE)):
+        size_byte = tmp_size * 1024 * 1024 * 1024
+    elif bool(re.search('T', tmp_unit, re.IGNORECASE)):
+        size_byte = tmp_size * 1024 * 1024 * 1024 * 1024
+    else:
+        raise Exception("Error string size, just support KB/MB/GB/TB (IGNORECASE)")
+
+    return size_byte
 
 
 def generate_random_string(str_len=16):
@@ -1233,141 +995,6 @@ def ordered_yaml_dump(data, stream=None, Dumper=yaml.SafeDumper, **kwds):
     return yaml.dump(data, stream, OrderedDumper, **kwds)
 
 
-def json_load(json_file_path):
-    """
-    Load json files: json.load
-    :param json_file_path:
-    :return:
-    """
-
-    my_logger.log(21, 'Load json {0}'.format(json_file_path))
-    try:
-        with open(json_file_path, 'r') as f:
-            json_info = json.load(f)
-        return json_info
-    except Exception as e:
-        raise Exception('Load json file failed.\n{err}'.format(err=e))
-
-
-def strsize_to_size(str_size):
-    """
-    convert str_size such as 1K,1M,1G,1T to size 1024 (byte)
-    :param str_size:such as 1K,1M,1G,1T
-    :return:size (byte)
-    """
-
-    str_size = str(str_size) if not isinstance(str_size, str) else str_size
-
-    if not bool(re.search('[a-z_A-Z]', str_size)):
-        return int(str_size)
-
-    if not bool(re.search('[0-9]', str_size)):
-        raise Exception('Not support string size: {}'.format(str_size))
-
-    regx = re.compile(r'(\d+)\s*([a-z_A-Z]+)', re.I)
-    tmp_size_unit = regx.findall(str_size)[0]
-    tmp_size = int(tmp_size_unit[0])
-    tmp_unit = tmp_size_unit[1]
-    if bool(re.search('K', tmp_unit, re.IGNORECASE)):
-        size_byte = tmp_size * 1024
-    elif bool(re.search('M', tmp_unit, re.IGNORECASE)):
-        size_byte = tmp_size * 1024 * 1024
-    elif bool(re.search('G', tmp_unit, re.IGNORECASE)):
-        size_byte = tmp_size * 1024 * 1024 * 1024
-    elif bool(re.search('T', tmp_unit, re.IGNORECASE)):
-        size_byte = tmp_size * 1024 * 1024 * 1024 * 1024
-    else:
-        raise Exception("Error string size, just support KB/MB/GB/TB (IGNORECASE)")
-
-    return size_byte
-
-
-def ip_to_num(ip):
-    """
-    convert ip(ipv4) address to a int num
-    :param ip:
-    :return: int num
-    """
-
-    lp = [int(x) for x in ip.split('.')]
-    return lp[0] << 24 | lp[1] << 16 | lp[2] << 8 | lp[3]
-
-
-def num_to_ip(num):
-    """
-    convert int num to ip(ipv4) address
-    :param num:
-    :return:
-    """
-
-    ip = ['', '', '', '']
-    ip[3] = (num & 0xff)
-    ip[2] = (num & 0xff00) >> 8
-    ip[1] = (num & 0xff0000) >> 16
-    ip[0] = (num & 0xff000000) >> 24
-    return '%s.%s.%s.%s' % (ip[0], ip[1], ip[2], ip[3])
-
-
-def is_ping_ok(ip, retry=30):
-    """
-    Check if the machine can ping successful
-    :param ip:
-    :param retry:
-    :return:(bool) True / False
-    """
-
-    if WINDOWS:
-        cmd = "ping %s" % ip
-    elif POSIX:
-        cmd = "ping -c1 %s" % ip
-    else:
-        cmd = "ping %s" % ip
-
-    for x in range(retry):
-        rc, output = run_cmd(cmd, expected_rc='ignore')
-        if "ttl=" in output.lower():
-            my_logger.info(ip + ' is Reachable')
-            return True
-        else:
-            time.sleep(3)
-            my_logger.warning(ip + ' is Not Reachable')
-            continue
-    else:
-        return False
-
-
-def get_unused_ip(ip_start, wasteful=True):
-    """
-    get unused ip
-    :param ip_start:
-    :param wasteful: If True, will skip the ip_start
-    :return:
-    """
-    ip_start_num = ip_to_num(ip_start)
-    if wasteful:
-        ip_start_num += 1
-    while True:
-        new_ip = num_to_ip(ip_start_num)
-        if is_ping_ok(new_ip, retry=1):
-            ip_start_num += 1
-            continue
-        else:
-            break
-    return new_ip
-
-
-def get_current_time():
-    return int(time.time() * 1000)
-
-
-def base64_encode(original_string):
-    return base64.b64encode(original_string)
-
-
-def base64_decode(encoded_string):
-    return base64.b64decode(encoded_string)
-
-
 def verify_path(local_path):
     """
     verify the local path exist, if not create it
@@ -1381,12 +1008,27 @@ def verify_path(local_path):
             raise Exception(e)
 
 
-def python_major_version():
-    return sys.version_info.major
+# tools
+def reserve_cpu_deadloop():
+    """reserve all cpu resource by deadloop"""
+    while True:
+         pass
+
+
+def reserve_memory(mem_size_str='1GB', reserve_time=3600):
+    """
+    reserve_memory: size and keep time
+    :param mem_size_str: 1GB | 1MB | 1KB ...
+    :param reserve_time: 60(s)
+    :return:
+    """
+    mem_size_byte = strsize_to_size(mem_size_str)
+    s = ' ' * mem_size_byte
+    time.sleep(reserve_time)
+    return True
 
 
 if __name__ == "__main__":
     pass
-    restart_sv_list = [('e', 'd'), ('a', 's')]
-    sv_type_seq_list = ['a', 'b', 'c', 'e']
-    print(sort_list_by_keylist(restart_sv_list, sv_type_seq_list, 0))
+    rc, output = ssh_cmd('10.25.119.1', 'root', 'password', 'df -h')
+    print(output.split(b'\n'))
