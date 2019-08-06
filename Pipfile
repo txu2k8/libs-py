@@ -10,6 +10,8 @@ paramiko = "*"
 scp = "*"
 colorlog = "*"
 coloredlogs = "*"
+progressbar = "*"
+micropython-fcntl = "*"
 
 [requires]
 python_version = "3.7"

@@ -14,8 +14,7 @@
 # IN THE SOFTWARE.
 ##############################################################################
 
-r""" decorator: retry
-"""
+"""decorator: retry"""
 
 import traceback
 import logging
@@ -47,7 +46,7 @@ except ImportError:
         def emit(self, record):
             pass
 
-from utils import log
+from tlib import log
 
 # ======================
 # --- Global
@@ -63,7 +62,7 @@ def __progressbar_k(sleep_time):
     :return:
     """
 
-    widgets = ['Progress: ', Percentage(), ' ', Bar(marker=RotatingMarker('>-=')), ' ', ETA()]
+    widgets = ['Progress: ', Percentage(), ' ', Bar(marker=RotatingMarker('-=>')), ' ', ETA()]
     pbar = ProgressBar(widgets=widgets, maxval=sleep_time).start()
     for i in range(sleep_time):
         pbar.update(1 * i + 1)
@@ -170,6 +169,7 @@ def retry_call(f, fargs=None, fkwargs=None, exceptions=Exception, tries=-1, dela
     :param backoff: multiplier applied to delay between attempts. default: 1 (no backoff).
     :param jitter: extra seconds added to delay between attempts. default: 0.
                    fixed if a number, random if a range tuple (min, max)
+    :param raise_exception:
     :param logger: logger.warning(fmt, error, delay) will be called on failed attempts.
                    default: retry.logging_logger. if None, logging is disabled.
     :returns: the result of the f function.

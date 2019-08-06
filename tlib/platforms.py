@@ -15,34 +15,52 @@
 ##############################################################################
 
 """
-Some own/observed great lib/ideas,common useful python libs.
+:description:
+    cross-platform functions related module
 """
 
-import sys
-from tlib import log
-from tlib import decorators
-from tlib import err
+import select
+import platform
 
-# from tlib import mail
-# from tlib import net
-# from tlib import version
-# from tlib import timeplus as time
-# from tlib import timeplus
-# from tlib import util
-# from tlib import unittest
-# from tlib import res
-# from tlib.shell import oper
-# from tlib import thirdp
-from tlib import platforms
-
-if sys.version_info < (2, 6):
-    raise ImportError('tlib needs to be run on python 2.6 and above.')
-
-
-# __all__ = [
-#     'err', 'net', 'log', 'mail', 'shell', 'time',
-#     'util', 'unittest', 'decorators', 'thirdp', 'platforms'
-# ]
 __all__ = [
-    'err', 'log', 'decorators', 'platforms', 'shell'
+    'is_linux',
+    'is_windows',
+    'is_mac'
 ]
+
+
+def is_linux():
+    """
+    Check if you are running on Linux.
+
+    :return:
+        True or False
+    """
+    if platform.platform().startswith('Linux'):
+        return True
+    else:
+        return False
+
+
+def is_windows():
+    """
+    Check if you are running on Windows.
+
+    :return:
+        True or False
+    """
+
+    if platform.platform().startswith('Windows'):
+        return True
+    else:
+        return False
+
+
+def is_mac():
+    """
+    is mac os
+    """
+    if hasattr(select, 'kqueue'):
+        return True
+    else:
+        return False

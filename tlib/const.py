@@ -15,34 +15,46 @@
 ##############################################################################
 
 """
-Some own/observed great lib/ideas,common useful python libs.
+:desc:
+    Const variable for internal use. Use it when you know
+    what this _const really means
 """
 
 import sys
-from tlib import log
-from tlib import decorators
-from tlib import err
-
-# from tlib import mail
-# from tlib import net
-# from tlib import version
-# from tlib import timeplus as time
-# from tlib import timeplus
-# from tlib import util
-# from tlib import unittest
-# from tlib import res
-# from tlib.shell import oper
-# from tlib import thirdp
-from tlib import platforms
-
-if sys.version_info < (2, 6):
-    raise ImportError('tlib needs to be run on python 2.6 and above.')
 
 
-# __all__ = [
-#     'err', 'net', 'log', 'mail', 'shell', 'time',
-#     'util', 'unittest', 'decorators', 'thirdp', 'platforms'
-# ]
-__all__ = [
-    'err', 'log', 'decorators', 'platforms', 'shell'
-]
+class _const(object):
+    """
+    internal const class
+    """
+    class ConstError(Exception):
+        """
+        const error
+        """
+
+        def __init__(self, msg):
+            self._msg = 'TLIB const error:' + str(msg)
+
+        def __str__(self):
+            return repr(self._msg)
+
+    def __setattr__(self, key, value):
+        if not key.isupper():
+            raise self.ConstError('Const value shoule be upper')
+        if key in self.__dict__:
+            raise self.ConstError('Const value cannot be changed')
+        self.__dict__[key] = value
+
+
+"""
+you can access tlib const like below:
+    from tlib import const
+    print const.VERSION
+
+"""
+
+_const_obj = _const()
+_const_obj.VERSION = '1.1.0'
+_const_obj.AUTHOR = 'tao.xu2008@outlook.com'
+
+sys.modules[__name__] = _const_obj

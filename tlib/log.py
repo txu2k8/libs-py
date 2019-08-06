@@ -24,7 +24,7 @@ import unittest
 
 __all__ = [
     'debug', 'info', 'warn', 'error', 'critical',
-    'get_logger', 'init_logger', 'reinit_logger', 'set_loglevel',
+    'init_logger', 'init_logger', 'reinit_logger', 'set_loglevel',
     'ROTATION', 'INFINITE', 'get_inited_logger_name', 'parse_msg',
     'backtrace_info', 'backtrace_debug', 'backtrace_error', 'backtrace_critical',
     'debug_if', 'info_if', 'error_if', 'warn_if', 'critical_if'
@@ -109,6 +109,7 @@ critical = logging.critical
 # Add a new log level 21 -- DESCRIBE, usage: logging.log(21, 'mesage')
 logging.addLevelName(21, 'DESCRIBE')
 
+
 class _Singleton(object):
     """
     Make your class singeton
@@ -190,7 +191,8 @@ class _LoggerMan(object):
     def __init__(self):
         pass
 
-    def get_logger(self):
+    @property
+    def m_logger(self):
         if self._mylogger is None:
             raise err.LoggerException('The logger has not been initalized Yet. Call init_comlog first')
         return self._mylogger
@@ -199,7 +201,8 @@ class _LoggerMan(object):
         if self._mylogger is not None:
             raise err.LoggerException('WARNING!!! The logger {0} has been initialized already.'.format(self._mylogger))
         self._mylogger = logger
-        logging.root = logger
+        # logging.root = logger
+
         self._mylogger.setLevel(logging.DEBUG)
 
     def reset_logger(self, logger):
@@ -214,11 +217,26 @@ class _LoggerMan(object):
         if self._mylogger is None:
             return False
         else:
-            print('The logger {0} has been already initalized'.format(self._mylogger))
+            print('{0} has been already initalized'.format(self._mylogger))
             return True
 
-    def config_file_logger(self, logfile, loglevel=FILE_LEVEL, logtype=ROTATION,
-                           maxsize=FILE_MAXBYTES, rotation_count=FILE_BACKUPCOUNT, compress_log=False, gen_wf=False):
+    @staticmethod
+    def verify_path(file_path):
+        if not os.path.isdir(file_path):
+            try:
+                os.makedirs(file_path)
+            except OSError as e:
+                print(e)
+
+    def verify_logfile(self, logfile):
+        logfile = logfile + '.log' if not logfile.endswith('.log') else logfile
+        logfile_split = os.path.split(logfile)
+        log_path = os.path.join(os.getcwd(), 'log', logfile_split[0])
+        self.verify_path(log_path)
+
+        log_name = logfile_split[1]
+        logfile = os.path.join(log_path, log_name)
+
         if not os.path.exists(logfile):
             try:
                 if WINDOWS:
@@ -231,6 +249,11 @@ class _LoggerMan(object):
         elif not os.path.isfile(logfile):
             raise err.LoggerException('The log file exists. But NOT a regular file')
 
+        return logfile
+
+    def config_file_logger(self, logfile, loglevel=FILE_LEVEL, logtype=ROTATION,
+                           maxsize=FILE_MAXBYTES, rotation_count=FILE_BACKUPCOUNT, compress_log=False, gen_wf=False):
+        logfile = self.verify_logfile(logfile)
         # Config the file handler
         if logtype == ROTATION:
             if compress_log:
@@ -324,6 +347,7 @@ def init_logger(logfile='debug.log', logger_name='test', log_level=FILE_LEVEL,
     """
     logger_man = _LoggerMan()
     if not logger_man.is_initialized():
+        print(logger_name, 'is_initialized')
         # logger_man.set_logger(logging.getLogger())
         logger_man.set_logger(logging.getLogger(logger_name))
         if output_logfile:
@@ -347,7 +371,7 @@ def reinit_logger(logfile='debug.log', logger_name='test', log_level=FILE_LEVEL,
     """
     global INITED_LOGGER
     if logger_name in INITED_LOGGER:
-        msg = 'logger name:%s has been already initalized!!!' % logger_name
+        msg = 'The logger {0} has been already initalized!!!'.format(logger_name)
         raise ValueError(msg)
     INITED_LOGGER.append(logger_name)
 
@@ -415,7 +439,7 @@ def backtrace_info(msg, back_trace_len=0):
     try:
         msg = _log_file_func_info(msg, back_trace_len)
         logger_man = _LoggerMan()
-        logger_man.get_logger().info(msg)
+        logger_man.m_logger.info(msg)
     except err.LoggerException:
         return
     except Exception as e:
@@ -429,7 +453,7 @@ def backtrace_debug(msg, back_trace_len=0):
     try:
         msg = _log_file_func_info(msg, back_trace_len)
         logger_man = _LoggerMan()
-        logger_man.get_logger().debug(msg)
+        logger_man.m_logger.debug(msg)
     except err.LoggerException:
         return
     except Exception as e:
@@ -443,7 +467,7 @@ def backtrace_warn(msg, back_trace_len=0):
     try:
         msg = _log_file_func_info(msg, back_trace_len)
         logger_man = _LoggerMan()
-        logger_man.get_logger().warn(msg)
+        logger_man.m_logger.warn(msg)
     except err.LoggerException:
         return
     except Exception as e:
@@ -457,7 +481,7 @@ def backtrace_error(msg, back_trace_len=0):
     try:
         msg = _log_file_func_info(msg, back_trace_len)
         logger_man = _LoggerMan()
-        logger_man.get_logger().error(msg)
+        logger_man.m_logger.error(msg)
     except err.LoggerException:
         return
     except Exception as error:
@@ -471,7 +495,7 @@ def backtrace_critical(msg, back_trace_len=0):
     try:
         msg = _log_file_func_info(msg, back_trace_len)
         logger_man = _LoggerMan()
-        logger_man.get_logger().critical(msg)
+        logger_man.m_logger.critical(msg)
     except err.LoggerException:
         return
     except Exception as e:
@@ -483,7 +507,7 @@ def set_loglevel(logging_level):
     change log level during runtime
     """
     logger_man = _LoggerMan()
-    logger_man.get_logger().setLevel(logging_level)
+    logger_man.m_logger.setLevel(logging_level)
 
 
 def parse_msg(log_line):
@@ -607,26 +631,36 @@ class LogTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_1(self):
-        logfile = "test_1.log"
-        logger = get_logger(logfile, logger_name='test1', debug=False)
+    def stest_1(self):
+        log_file = "test_1.log"
+        basic_config(log_file)
+        logger = logging.getLogger()
         logger.info('test_1 start ...')
-        logger.info('hello,world')
-        logger.warning('hello,world')
-        logger.debug('hello,world')
-        logger.error('hello,world')
-        logger.critical('hello,world')
+        logger.info('test_1 hello,world')
+        logger.warning('test_1 hello,world')
+        logger.debug('test_1 hello,world')
+        logger.error('test_1 hello,world')
+        logger.critical('test_1 hello,world')
 
     def test_2(self):
         logfile = "test_2.log"
         logger = get_logger(logfile, logger_name='test2', debug=False)
         logger.info('test_2 start ...')
-        logger.info('hello,world')
-        logger.warning('hello,world')
-        logger.debug('hello,world')
-        logger.error('hello,world')
+        logger.info('test_2 hello,world')
+        logger.warning('test_2 hello,world')
+        logger.debug('test_2 hello,world')
+        logger.error('test_2 hello,world')
         logger.critical('hello,world')
-        logger.log(21, 'hello,world')
+
+    def test_3(self):
+        logger = get_logger(logger_name='test2')
+        logger.info('test_3 start ...')
+        logger.info('test_3 hello,world')
+        logger.warning('test_3 hello,world')
+        logger.debug('test_3 hello,world')
+        logger.error('test_3 hello,world')
+        logger.critical('test_3 hello,world')
+        logger.log(21, 'test_3 hello,world')
 
 
 if __name__ == '__main__':
