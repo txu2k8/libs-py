@@ -202,9 +202,7 @@ class _LoggerMan(object):
             raise err.LoggerException('WARNING!!! The logger {0} has been initialized already.'.format(self._mylogger))
         self._mylogger = logger
         self._mylogger.handlers = []
-        # logging.root.handlers = []
-
-        self._mylogger.setLevel(logging.INFO)
+        self._mylogger.setLevel(logging.DEBUG)
 
     def reset_logger(self, logger):
         if self._mylogger:
