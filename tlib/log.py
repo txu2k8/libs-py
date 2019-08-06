@@ -201,10 +201,10 @@ class _LoggerMan(object):
         if self._mylogger is not None:
             raise err.LoggerException('WARNING!!! The logger {0} has been initialized already.'.format(self._mylogger))
         self._mylogger = logger
-        # self._mylogger.handlers = []
-        # logging.root = logger
+        self._mylogger.handlers = []
+        # logging.root.handlers = []
 
-        self._mylogger.setLevel(logging.DEBUG)
+        self._mylogger.setLevel(logging.INFO)
 
     def reset_logger(self, logger):
         if self._mylogger:
@@ -219,7 +219,7 @@ class _LoggerMan(object):
         if self._mylogger is None:
             return False
         else:
-            print('{0} has been already initalized'.format(self._mylogger))
+            # self._mylogger.debug('{0} has been already initalized'.format(self._mylogger))
             return True
 
     @staticmethod
@@ -287,7 +287,7 @@ class _LoggerMan(object):
             coloredlogs.install(logger=self._mylogger, level=log_level, fmt=CONSOLE_FORMATE,
                                 field_styles=DEFAULT_FIELD_STYLES, level_styles=DEFAULT_LEVEL_STYLES)
         else:
-            formatter = logging.Formatter(FILE_FORMATE)
+            formatter = logging.Formatter(fmt=CONSOLE_FORMATE, datefmt=DATE_FORMATE)
             streamhandler = logging.StreamHandler()
             streamhandler.setLevel(log_level)
             streamhandler.setFormatter(formatter)
@@ -389,14 +389,16 @@ def reinit_logger(logfile='debug.log', logger_name='test', log_level=FILE_LEVEL,
     return new_logger
 
 
-def get_logger(logfile='debug.log', logger_name='test', print_console=True, colored_console=True, debug=False):
+def get_logger(logfile='debug.log', logger_name='test', output_logfile=True, compress_log=False, gen_wf=False,
+               print_console=True, colored_console=True, debug=False):
     if debug:
         global FILE_LEVEL, CONSOLE_LEVEL, CONSOLE_FORMATE, FILE_FORMATE
         FILE_LEVEL = logging.DEBUG
         CONSOLE_LEVEL = logging.DEBUG
         CONSOLE_FORMATE = DEBUG_FORMATE
         FILE_FORMATE = DEBUG_FORMATE
-    test_logger = init_logger(logfile, logger_name, print_console=print_console, colored_console=colored_console)
+    test_logger = init_logger(logfile, logger_name, output_logfile=output_logfile, compress_log=compress_log,
+                              gen_wf=gen_wf, print_console=print_console, colored_console=colored_console)
     return test_logger
 
 
@@ -600,14 +602,15 @@ def basic_config(log_file):
         except OSError as e:
             print(e)
 
-    logging.basicConfig(level=FILE_LEVEL,
-                        format=FILE_FORMATE,
-                        datefmt=DATE_FORMATE,
-                        filename=log_pathname,
-                        filemode='w')
+    # logging.basicConfig(level=FILE_LEVEL,
+    #                     format=FILE_FORMATE,
+    #                     datefmt=DATE_FORMATE,
+    #                     filename=log_pathname,
+    #                     filemode='w',
+    #                     )
     console = logging.StreamHandler()
     console.setLevel(CONSOLE_LEVEL)
-    formatter = logging.Formatter(CONSOLE_FORMATE)
+    formatter = logging.Formatter(fmt=CONSOLE_FORMATE, datefmt=DATE_FORMATE)
     console.setFormatter(formatter)
     # add the handler to the root logger
     logging.getLogger('').addHandler(console)
@@ -640,10 +643,10 @@ class LogTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def stest_1(self):
+    def Stest_1(self):
         log_file = "test_1.log"
         basic_config(log_file)
-        logger = logging.getLogger()
+        logger = logging.getLogger(__name__)
         logger.info('test_1 start ...')
         logger.info('test_1 hello,world')
         logger.warning('test_1 hello,world')
@@ -653,7 +656,7 @@ class LogTestCase(unittest.TestCase):
 
     def test_2(self):
         logfile = "test_2.log"
-        logger = get_logger(logfile, logger_name='test2', debug=False)
+        logger = get_logger(logfile, logger_name='test2', debug=True)
         logger.info('test_2 start ...')
         logger.info('test_2 hello,world')
         logger.warning('test_2 hello,world')
@@ -661,16 +664,16 @@ class LogTestCase(unittest.TestCase):
         logger.error('test_2 hello,world')
         logger.critical('test_2 hello,world')
 
-    def stest_3_1(self):
-        log_file = "test_3_1.log"
+    def test_2_2(self):
+        log_file = "test_2_2.log"
         basic_config(log_file)
-        logger = logging.getLogger()
-        logger.info('test_3_1 start ...')
-        logger.info('test_3_1 hello,world')
-        logger.warning('test_3_1 hello,world')
-        logger.debug('test_3_1 hello,world')
-        logger.error('test_3_1 hello,world')
-        logger.critical('test_3_1 hello,world')
+        logger = logging.getLogger(__name__)
+        logger.info('test_2_2 start ...')
+        logger.info('test_2_2 hello,world')
+        logger.warning('test_2_2 hello,world')
+        logger.debug('test_2_2 hello,world')
+        logger.error('test_2_2 hello,world')
+        logger.critical('test_2_2 hello,world')
 
     def test_3(self):
         logger = get_logger(logger_name='test2')
