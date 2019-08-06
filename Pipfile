@@ -9,6 +9,7 @@ verify_ssl = true
 paramiko = "*"
 scp = "*"
 colorlog = "*"
+coloredlogs = "*"
 
 [requires]
 python_version = "3.7"
