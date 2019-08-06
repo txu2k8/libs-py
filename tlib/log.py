@@ -201,6 +201,7 @@ class _LoggerMan(object):
         if self._mylogger is not None:
             raise err.LoggerException('WARNING!!! The logger {0} has been initialized already.'.format(self._mylogger))
         self._mylogger = logger
+        # self._mylogger.handlers = []
         # logging.root = logger
 
         self._mylogger.setLevel(logging.DEBUG)
@@ -212,6 +213,7 @@ class _LoggerMan(object):
         logging.root = logger
         self._mylogger.setLevel(logging.DEBUG)
 
+    @property
     def is_initialized(self):
         """Initialized or not"""
         if self._mylogger is None:
@@ -346,17 +348,18 @@ def init_logger(logfile='debug.log', logger_name='test', log_level=FILE_LEVEL,
 
     """
     logger_man = _LoggerMan()
-    if not logger_man.is_initialized():
-        print(logger_name, 'is_initialized')
+    if not logger_man.is_initialized:
         # logger_man.set_logger(logging.getLogger())
-        logger_man.set_logger(logging.getLogger(logger_name))
+        new_logger = logging.getLogger(logger_name)
+        logger_man.set_logger(new_logger)
         if output_logfile:
             logger_man.config_file_logger(logfile, log_level, log_type, maxsize, rotation_count, compress_log, gen_wf)
         if print_console:
             logger_man.config_console_logger(CONSOLE_LEVEL, colored_console)
-        logging.getLogger(logger_name).info('-' * 20 + 'Log Initialized Successfully' + '-' * 20)
         global INITED_LOGGER
         INITED_LOGGER.append(logger_name)
+        # new_logger.debug('-' * 20 + '{0} Initialized Successfully'.format(new_logger) + '-' * 20)
+        return new_logger
     return logging.getLogger(logger_name)
 
 
@@ -376,13 +379,14 @@ def reinit_logger(logfile='debug.log', logger_name='test', log_level=FILE_LEVEL,
     INITED_LOGGER.append(logger_name)
 
     logger_man = _LoggerMan()
-    logger_man.reset_logger(logging.getLogger(logger_name))
+    new_logger = logging.getLogger(logger_name)
+    logger_man.reset_logger(new_logger)
     if output_logfile:
         logger_man.config_file_logger(logfile, log_level, log_type, maxsize, rotation_count, compress_log, gen_wf)
     if print_console:
         logger_man.config_console_logger(CONSOLE_LEVEL, colored_console)
-    logging.getLogger(logger_name).info('-' * 20 + 'Log Re-Initialized Successfully' + '-' * 20)
-    return logging.getLogger(logger_name)
+    # new_logger.debug('-' * 20 + '{0} Re-Initialized Successfully'.format(new_logger) + '-' * 20)
+    return new_logger
 
 
 def get_logger(logfile='debug.log', logger_name='test', print_console=True, colored_console=True, debug=False):
@@ -590,6 +594,11 @@ def basic_config(log_file):
     log_path = os.path.join(os.getcwd(), 'log', log_file_split[0])
     log_name = log_file_split[1]
     log_pathname = os.path.join(log_path, log_name)
+    if not os.path.isdir(log_path):
+        try:
+            os.makedirs(log_path)
+        except OSError as e:
+            print(e)
 
     logging.basicConfig(level=FILE_LEVEL,
                         format=FILE_FORMATE,
@@ -650,7 +659,18 @@ class LogTestCase(unittest.TestCase):
         logger.warning('test_2 hello,world')
         logger.debug('test_2 hello,world')
         logger.error('test_2 hello,world')
-        logger.critical('hello,world')
+        logger.critical('test_2 hello,world')
+
+    def stest_3_1(self):
+        log_file = "test_3_1.log"
+        basic_config(log_file)
+        logger = logging.getLogger()
+        logger.info('test_3_1 start ...')
+        logger.info('test_3_1 hello,world')
+        logger.warning('test_3_1 hello,world')
+        logger.debug('test_3_1 hello,world')
+        logger.error('test_3_1 hello,world')
+        logger.critical('test_3_1 hello,world')
 
     def test_3(self):
         logger = get_logger(logger_name='test2')
