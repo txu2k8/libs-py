@@ -60,7 +60,7 @@ else:
 
 # linux functionalities {{
 
-# pylint: disable=C0103
+
 def rm(name):
     """
     rm the file if no exception happens.

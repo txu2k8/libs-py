@@ -12,6 +12,7 @@ colorlog = "*"
 coloredlogs = "*"
 progressbar = "*"
 micropython-fcntl = "*"
+pexpect = "*"
 
 [requires]
 python_version = "3.7"
