@@ -91,7 +91,7 @@ class Cmd(object):
 
             except Exception as e:
                 my_logger.warning('(retry:%d/%d)Failed to run command "%s"\n%s' % (x, retry_max, cmd_spec, e))
-                util.progressbar_k(interval)
+                util.sleep_progressbar(interval)
         else:
             raise Exception('Failed to run command "{cmds}"'.format(cmds=cmd_spec))
 

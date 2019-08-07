@@ -36,8 +36,8 @@ import subprocess
 import paramiko
 import socket
 
-from utils import log
-from utils.retry import retry, retry_call
+from tlib import log
+from tlib.retry import retry, retry_call
 
 # =============================
 # --- Global Value
@@ -604,16 +604,17 @@ def get_remote_hostname(ip, username, password):
         return hostname
 
 
-def progressbar_k(sleep_time):
+def sleep_progressbar(seconds):
     """
-    Print a progress bar, total value: sleep_time(seconds)
-    :param sleep_time:
+    Print a progress bar, total value: seconds
+    :param seconds:
     :return:
     """
 
-    widgets = ['Progress: ', Percentage(), ' ', Bar(marker=RotatingMarker('>-=')), ' ', ETA()]
-    pbar = ProgressBar(widgets=widgets, maxval=sleep_time).start()
-    for i in range(sleep_time):
+    # widgets = ['Progress: ', Percentage(), ' ', Bar(marker=RotatingMarker('-=>')), ' ', Timer(), ' | ', ETA()]
+    widgets = ['Progress: ', Percentage(), ' ', Bar(marker=RotatingMarker('-=>')), ' ', ETA()]
+    pbar = ProgressBar(widgets=widgets, maxval=seconds).start()
+    for i in range(seconds):
         pbar.update(1 * i + 1)
         time.sleep(1)
     pbar.finish()

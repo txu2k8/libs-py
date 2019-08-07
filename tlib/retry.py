@@ -55,7 +55,7 @@ from tlib import log
 logging_logger = log.get_logger()
 
 
-def __progressbar_k(sleep_time):
+def __sleep_progressbar(sleep_time):
     """
     Print a progress bar, total value: sleep_time(seconds)
     :param sleep_time:
@@ -118,7 +118,7 @@ def __retry_internal(f, exceptions=Exception, tries=-1, delay=0, max_delay=None,
                     return False
 
             # time.sleep(_delay)
-            __progressbar_k(_delay)
+            __sleep_progressbar(_delay)
             _delay *= backoff
 
             if isinstance(jitter, tuple):
