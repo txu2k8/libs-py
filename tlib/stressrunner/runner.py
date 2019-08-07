@@ -79,7 +79,6 @@ import traceback
 from xml.sax import saxutils
 import unittest
 
-from tlib import log
 from tlib.mail import SmtpServer, Mail
 from tlib.stressrunner import template
 
@@ -93,8 +92,9 @@ __version__ = "1.0.0.1"
 POSIX = os.name == "posix"
 WINDOWS = os.name == "nt"
 
-DEFAULT_LOGGER_FORMATE = '%(asctime)s %(name)s %(filename)s[%(lineno)d] [PID:%(process)d] %(levelname)s: %(message)s'
-DEFAULT_LOGGER = logging.getLogger('SR')
+# DEFAULT_LOGGER_FORMATE = '%(asctime)s %(name)s %(filename)s[%(lineno)d] [PID:%(process)d] %(levelname)s: %(message)s'
+DEFAULT_LOGGER_FORMATE = '%(asctime)s %(name)s %(levelname)s: %(message)s'
+DEFAULT_LOGGER = logging.getLogger('StressRunner')
 coloredlogs.install(logger=DEFAULT_LOGGER, level=logging.DEBUG, fmt=DEFAULT_LOGGER_FORMATE)
 
 # default report_path

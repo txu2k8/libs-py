@@ -19,6 +19,7 @@ Some own/observed great lib/ideas,common useful python libs.
 """
 
 import sys
+import test
 from tlib import log
 from tlib import decorators
 from tlib import err

@@ -136,7 +136,7 @@ class SmtpMailer(object):
     smtp server examples
     ::
 
-        from cup import mail
+        from tlib import mail
         mailer = mail.SmtpMailer(
             'xxx@xxx.com',
             'xxxx.smtp.xxx.com',
@@ -190,7 +190,7 @@ class SmtpMailer(object):
     @classmethod
     def _check_type(cls, instance, type_list):
         if not type(instance) in type_list:
-            raise TypeError('%s only accepts types like: %s' %(instance, ','.join(type_list)))
+            raise TypeError('%s only accepts types like: %s' % (instance, ','.join(type_list)))
 
     @classmethod
     def _handle_attachments(cls, outer, attachments):

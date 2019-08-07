@@ -24,7 +24,7 @@ import unittest
 
 __all__ = [
     'debug', 'info', 'warning', 'error', 'critical',
-    'init_logger', 'set_loglevel', 'get_inited_logger_name',
+    'init_logger', 'set_loglevel', 'get_inited_logger_name', 'basic_config',
     'ROTATION', 'INFINITE', 'parse_msg',
     'backtrace_info', 'backtrace_debug', 'backtrace_error', 'backtrace_critical',
     'debug_if', 'info_if', 'error_if', 'warn_if', 'critical_if'
@@ -630,7 +630,7 @@ class LogTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def Stest_1(self):
+    def test_1(self):
         log_file = "test_1.log"
         basic_config(log_file)
         logger = logging.getLogger(__name__)
