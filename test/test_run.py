@@ -15,45 +15,32 @@
 ##############################################################################
 
 """
-Test suite 1: TestCases for log.py
+Test suites run
 """
 
 import unittest
-
 from tlib.stressrunner import StressRunner
+
 from tlib import log
+from test.test_1 import TestLog
+from test.test_2 import TestMail
 
 
-my_logger = log.get_logger()
-
-
-class TestLog(unittest.TestCase):
-    def setUp(self) -> None:
-        pass
-
-    def tearDown(self) -> None:
-        pass
-
-    def test_1(self):
-        my_logger.log(21, 'test_1 Describe: Test Case for log.py')
-        my_logger.info('test_1 info')
-        my_logger.debug('test_1 debug')
-        my_logger.warning('test_1 warning')
-        my_logger.error('test_1 error')
-        my_logger.critical('test_1 critical')
+my_logger = log.get_logger(logfile='./test1/test_1.log', logger_name='test', debug=True, reset_logger=True)
 
 
 if __name__ == '__main__':
     # Generate test suite
-    test_suite = unittest.TestSuite(map(TestLog, ['test_1']))
-    # test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestLog))
+    # test_suite = unittest.TestSuite(map(TestLog, ['test_1']))
+    test_suite = unittest.TestSuite()
+    test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestLog))
+    test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMail))
 
     # output to a file
-
     runner = StressRunner(
         report_path='./report/',
         title='My unit test',
         description='This demonstrates the report output by StressRunner.',
-        # logger=my_logger
+        logger=my_logger
     )
     runner.run(test_suite)

@@ -23,8 +23,8 @@ from tlib import log
 from tlib import decorators
 from tlib import err
 
-from tlib import mail
-from tlib import shell
+# from tlib import mail
+# from tlib import shell
 # from tlib import net
 # from tlib import version
 # from tlib import timeplus as time

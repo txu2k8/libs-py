@@ -43,9 +43,7 @@ class Singleton(object):
 
     example::
 
-        from tlib import decorators
-
-        @decorators.Singleton
+        @Singleton
         class YourClass(object):
             def __init__(self):
             pass

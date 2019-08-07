@@ -24,8 +24,8 @@ import unittest
 
 __all__ = [
     'debug', 'info', 'warn', 'error', 'critical',
-    'init_logger', 'init_logger', 'reinit_logger', 'set_loglevel',
-    'ROTATION', 'INFINITE', 'get_inited_logger_name', 'parse_msg',
+    'init_logger', 'set_loglevel', 'get_inited_logger_name',
+    'ROTATION', 'INFINITE', 'parse_msg',
     'backtrace_info', 'backtrace_debug', 'backtrace_error', 'backtrace_critical',
     'debug_if', 'info_if', 'error_if', 'warn_if', 'critical_if'
 ]
@@ -197,18 +197,23 @@ class _LoggerMan(object):
             raise err.LoggerException('The logger has not been initalized Yet. Call init_comlog first')
         return self._mylogger
 
-    def set_logger(self, logger):
+    def set_logger(self, logger_name):
         if self._mylogger is not None:
             raise err.LoggerException('WARNING!!! The logger {0} has been initialized already.'.format(self._mylogger))
+        logging.root = logging.RootLogger(logging.WARNING)
+        logger = logging.getLogger(logger_name)
         self._mylogger = logger
         self._mylogger.handlers = []
         self._mylogger.setLevel(logging.DEBUG)
 
-    def reset_logger(self, logger):
+    def reset_logger(self, logger_name):
         if self._mylogger:
             del self._mylogger
+        logging.root = logging.RootLogger(logging.WARNING)
+        logger = logging.getLogger(logger_name)
         self._mylogger = logger
-        logging.root = logger
+        # logging.root = logger
+        self._mylogger.handlers = []
         self._mylogger.setLevel(logging.DEBUG)
 
     @property
@@ -295,7 +300,7 @@ class _LoggerMan(object):
 def init_logger(logfile='debug.log', logger_name='test', log_level=FILE_LEVEL,
                 log_type=ROTATION, maxsize=FILE_MAXBYTES, rotation_count=FILE_BACKUPCOUNT,
                 output_logfile=True, compress_log=False, gen_wf=False,
-                print_console=True, colored_console=True):
+                print_console=True, colored_console=True, reset_logger=False):
     """
     Initialize your logging
 
@@ -327,77 +332,60 @@ def init_logger(logfile='debug.log', logger_name='test', log_level=FILE_LEVEL,
         print to stdout or not?
     :param colored_console:
         print to stdout colored
+    :param reset_logger:
+        reset logger
 
     *E.g.*
     ::
         import logging
-        from utils import log
-        log.init_comlog(
+        from tlib import log
+        log.init_logger(
             '/home/work/test/test.log',
-            'test',
-            log.DEBUG,
-            log.ROTATION,
-            1024,
-            False,
-            False
+            'test'
         )
         log.info('test xxx')
         log.critical('test critical')
 
     """
-    logger_man = _LoggerMan()
-    if not logger_man.is_initialized:
-        # logger_man.set_logger(logging.getLogger())
-        logging.root = logging.RootLogger(logging.WARNING)
-        new_logger = logging.getLogger(logger_name)
-        logger_man.set_logger(new_logger)
-        if output_logfile:
-            logger_man.config_file_logger(logfile, log_level, log_type, maxsize, rotation_count, compress_log, gen_wf)
-        if print_console:
-            logger_man.config_console_logger(CONSOLE_LEVEL, colored_console)
-        global INITED_LOGGER
-        INITED_LOGGER.append(logger_name)
-        # new_logger.debug('-' * 20 + '{0} Initialized Successfully'.format(new_logger) + '-' * 20)
-        return new_logger
-    return logging.getLogger(logger_name)
-
-
-def reinit_logger(logfile='debug.log', logger_name='test', log_level=FILE_LEVEL,
-                  log_type=ROTATION, maxsize=FILE_MAXBYTES, rotation_count=FILE_BACKUPCOUNT,
-                  output_logfile=True, compress_log=False, gen_wf=False,
-                  print_console=True, colored_console=True):
-    """
-    reinitalize logging system, paramters same to init_comlog.
-    reinit_comlog will reset all logging parameters，
-    Make sure you used a different loggername from the old one!
-    """
-    global INITED_LOGGER
-    if logger_name in INITED_LOGGER:
-        msg = 'The logger {0} has been already initalized!!!'.format(logger_name)
-        raise ValueError(msg)
-    INITED_LOGGER.append(logger_name)
 
     logger_man = _LoggerMan()
-    new_logger = logging.getLogger(logger_name)
-    logger_man.reset_logger(new_logger)
+
+    # logging.root = logging.RootLogger(logging.WARNING)
+    # new_logger = logging.getLogger(logger_name)
+    if reset_logger:
+        logger_man.reset_logger(logger_name)
+    elif not logger_man.is_initialized:
+        logger_man.set_logger(logger_name)
+    else:
+        # Not need init the initialized logger
+        return logging.getLogger(logger_name)
+
     if output_logfile:
         logger_man.config_file_logger(logfile, log_level, log_type, maxsize, rotation_count, compress_log, gen_wf)
     if print_console:
         logger_man.config_console_logger(CONSOLE_LEVEL, colored_console)
-    # new_logger.debug('-' * 20 + '{0} Re-Initialized Successfully'.format(new_logger) + '-' * 20)
+    global INITED_LOGGER
+    if logger_name not in INITED_LOGGER:
+        INITED_LOGGER.append(logger_name)
+
+    new_logger = logging.getLogger(logger_name)
+    new_logger.info('Log path: {0}'.format(logfile))
+    new_logger.debug('-' * 20 + '{0} Initialized Successfully'.format(new_logger) + '-' * 20)
     return new_logger
 
 
 def get_logger(logfile='debug.log', logger_name='test', output_logfile=True, compress_log=False, gen_wf=False,
-               print_console=True, colored_console=True, debug=False):
+               print_console=True, colored_console=True, debug=False, reset_logger=False):
     if debug:
         global FILE_LEVEL, CONSOLE_LEVEL, CONSOLE_FORMATE, FILE_FORMATE
         FILE_LEVEL = logging.DEBUG
         CONSOLE_LEVEL = logging.DEBUG
         CONSOLE_FORMATE = DEBUG_FORMATE
         FILE_FORMATE = DEBUG_FORMATE
+
     test_logger = init_logger(logfile, logger_name, output_logfile=output_logfile, compress_log=compress_log,
-                              gen_wf=gen_wf, print_console=print_console, colored_console=colored_console)
+                              gen_wf=gen_wf, print_console=print_console, colored_console=colored_console,
+                              reset_logger=reset_logger)
     return test_logger
 
 
@@ -672,13 +660,18 @@ class LogTestCase(unittest.TestCase):
         logger.critical('test_2_2 hello,world')
 
     def test_3(self):
-        logger = get_logger(logger_name='test2')
+        logger = get_logger(logger_name='test2', logfile='test.log', reset_logger=True)
         logger.info('test_3 start ...')
         logger.warning('test_3 hello,world')
         logger.debug('test_3 hello,world')
         logger.error('test_3 hello,world')
         logger.critical('test_3 hello,world')
         logger.log(21, 'test_3 hello,world')
+
+    def test_4(self):
+        logger = get_logger(logger_name='test2')
+        logger.info('test_4 start ...')
+        logger.warning('test_4 hello,world')
 
 
 if __name__ == '__main__':

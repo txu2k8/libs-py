@@ -79,8 +79,9 @@ import traceback
 from xml.sax import saxutils
 import unittest
 
+from tlib import log
 from tlib.mail import SmtpServer, Mail
-from tlib.stressrunner import report_template
+from tlib.stressrunner import template
 
 
 # =============================
@@ -92,7 +93,7 @@ __version__ = "1.0.0.1"
 POSIX = os.name == "posix"
 WINDOWS = os.name == "nt"
 
-DEFAULT_LOGGER_FORMATE = '%(asctime)s %(filename)s[%(lineno)d] [PID:%(process)d] %(levelname)s: %(message)s'
+DEFAULT_LOGGER_FORMATE = '%(asctime)s %(name)s %(filename)s[%(lineno)d] [PID:%(process)d] %(levelname)s: %(message)s'
 DEFAULT_LOGGER = logging.getLogger('SR')
 coloredlogs.install(logger=DEFAULT_LOGGER, level=logging.DEBUG, fmt=DEFAULT_LOGGER_FORMATE)
 
@@ -646,7 +647,7 @@ class StressRunner(object):
         stylesheet = self._generate_stylesheet()
         heading = self._generate_heading(heading_attrs)
         report = self._generate_report(result)
-        output = report_template.HTML_TEMPLATE % dict(
+        output = template.HTML_TEMPLATE % dict(
             title=saxutils.escape(self.title),
             stylesheet=stylesheet,
             heading=heading,
@@ -666,13 +667,13 @@ class StressRunner(object):
     def _generate_heading(self, heading_attrs):
         a_lines = []
         for name, value in heading_attrs:
-            line = report_template.HEADING_ATTRIBUTE_TEMPLATE % dict(
+            line = template.HEADING_ATTRIBUTE_TEMPLATE % dict(
                 name=saxutils.escape(name),
                 value=saxutils.escape(value),
             )
             a_lines.append(line)
 
-        heading = report_template.HEADING_TEMPLATE % dict(
+        heading = template.HEADING_TEMPLATE % dict(
             title=saxutils.escape(self.title),
             parameters=''.join(a_lines),
             description=saxutils.escape(self.description),
@@ -727,7 +728,7 @@ class StressRunner(object):
         return attr_list
 
     def _generate_stylesheet(self):
-        return report_template.STYLESHEET_TEMPLATE
+        return template.STYLESHEET_TEMPLATE
 
     def _generate_report(self, result):
         rows = []
@@ -755,7 +756,7 @@ class StressRunner(object):
             doc = cls.__doc__ and cls.__doc__.split("\n")[0] or ""
             desc = doc and '%s: %s' % (name, doc) or name
 
-            row = report_template.REPORT_CLASS_TEMPLATE % dict(
+            row = template.REPORT_CLASS_TEMPLATE % dict(
                 style=ne > 0 and 'errorClass' or nf > 0 and 'failClass' or 'passClass',
                 desc=desc,
                 count=np + nf + ne + ns,
@@ -770,7 +771,7 @@ class StressRunner(object):
             for tid, (n, t, o, e, d, l) in enumerate(cls_results):
                 self._generate_report_test(rows, cid, tid, n, t, o, e, d, l)
 
-        report = report_template.REPORT_TEMPLATE % dict(
+        report = template.REPORT_TEMPLATE % dict(
             test_list=''.join(rows),
             count=str(result.success_count + result.failure_count + result.error_count + result.skipped_count),
             Pass=str(result.success_count),
@@ -790,10 +791,13 @@ class StressRunner(object):
         doc = t.shortDescription() or ""
         desc = doc and ('%s: %s' % (name, doc)) or name
         # tmpl = has_output and self.REPORT_TEST_WITH_OUTPUT_TMPL or self.REPORT_TEST_NO_OUTPUT_TMPL
-        tmpl = n == 3 and report_template.REPORT_SKIP_TEMPLATE or \
-            (has_err and report_template.REPORT_WITH_ERROR_TEMPLATE or
-             (has_output and report_template.REPORT_WITH_OUTPUT_TEMPLATE or
-              report_template.REPORT_NO_OUTPUT_TEMPLATE))
+        tmpl = (n == 3 and template.REPORT_SKIP_TEMPLATE or
+                (has_err and template.REPORT_WITH_ERROR_TEMPLATE or
+                 (has_output and template.REPORT_WITH_OUTPUT_TEMPLATE or
+                  template.REPORT_NO_OUTPUT_TEMPLATE
+                  )
+                 )
+                )
         # o and e should be byte string because they are collected from stdout and stderr?
         if isinstance(o, str):
             # TODO: some problem with 'string_escape': it escape \n and mess up formating
@@ -817,7 +821,7 @@ class StressRunner(object):
         else:
             ud = d
 
-        script = report_template.REPORT_OUTPUT_TEMPLATE % dict(
+        script = template.REPORT_OUTPUT_TEMPLATE % dict(
             # id = tid,
             output=saxutils.escape(uo + ue),
         )
@@ -830,7 +834,7 @@ class StressRunner(object):
             iteration=l,
             elapsedtime=ud,
             script=script,
-            status=report_template.STATUS[n],
+            status=template.STATUS[n],
         )
         rows.append(row)
         if not has_output:
@@ -855,7 +859,7 @@ class TestProgram(unittest.TestProgram):
         # base class's testRunner parameter is not useful because it means
         # we have to instantiate StressRunner before we know self.verbosity.
         if self.testRunner is None:
-            self.testRunner = StressRunner(verbosity=self.verbosity)
+            self.testRunner = StressRunner()
         unittest.TestProgram.runTests(self)
 
 

@@ -27,25 +27,25 @@ from tlib import log
 my_logger = log.get_logger()
 
 
-class TestLog(unittest.TestCase):
+class TestMail(unittest.TestCase):
     def setUp(self) -> None:
         pass
 
     def tearDown(self) -> None:
         pass
 
-    def test_1(self):
-        my_logger.log(21, 'test_1 Describe: Test Case for log.py')
-        my_logger.info('test_1 info')
-        my_logger.debug('test_1 debug')
-        my_logger.warning('test_1 warning')
-        my_logger.error('test_1 error')
-        my_logger.critical('test_1 critical')
+    def test_2(self):
+        my_logger.log(21, 'test_2 Describe: Test Case for mail.py')
+        my_logger.info('test_2 info')
+        my_logger.debug('test_2 debug')
+        my_logger.warning('test_2 warning')
+        my_logger.error('test_2 error')
+        my_logger.critical('test_2 critical')
 
 
 if __name__ == '__main__':
     # Generate test suite
-    test_suite = unittest.TestSuite(map(TestLog, ['test_1']))
+    test_suite = unittest.TestSuite(map(TestMail, ['test_2']))
     # test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestLog))
 
     # output to a file
