@@ -23,7 +23,7 @@ http://blog.csdn.net/orangleliu/article/details/53896441
 import unittest
 
 __all__ = [
-    'debug', 'info', 'warn', 'error', 'critical',
+    'debug', 'info', 'warning', 'error', 'critical',
     'init_logger', 'set_loglevel', 'get_inited_logger_name',
     'ROTATION', 'INFINITE', 'parse_msg',
     'backtrace_info', 'backtrace_debug', 'backtrace_error', 'backtrace_critical',
@@ -101,7 +101,7 @@ DEFAULT_LEVEL_STYLES = dict(
     critical=dict(color='red', bold=CAN_USE_BOLD_FONT))
 
 info = logging.info
-warn = logging.warn
+warning = logging.warning
 error = logging.error
 debug = logging.debug
 critical = logging.critical
