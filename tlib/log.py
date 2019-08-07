@@ -348,6 +348,7 @@ def init_logger(logfile='debug.log', logger_name='test', log_level=FILE_LEVEL,
     logger_man = _LoggerMan()
     if not logger_man.is_initialized:
         # logger_man.set_logger(logging.getLogger())
+        logging.root = logging.RootLogger(logging.WARNING)
         new_logger = logging.getLogger(logger_name)
         logger_man.set_logger(new_logger)
         if output_logfile:
@@ -646,7 +647,6 @@ class LogTestCase(unittest.TestCase):
         basic_config(log_file)
         logger = logging.getLogger(__name__)
         logger.info('test_1 start ...')
-        logger.info('test_1 hello,world')
         logger.warning('test_1 hello,world')
         logger.debug('test_1 hello,world')
         logger.error('test_1 hello,world')
@@ -656,7 +656,6 @@ class LogTestCase(unittest.TestCase):
         logfile = "test_2.log"
         logger = get_logger(logfile, logger_name='test2', debug=True)
         logger.info('test_2 start ...')
-        logger.info('test_2 hello,world')
         logger.warning('test_2 hello,world')
         logger.debug('test_2 hello,world')
         logger.error('test_2 hello,world')
@@ -667,7 +666,6 @@ class LogTestCase(unittest.TestCase):
         basic_config(log_file)
         logger = logging.getLogger(__name__)
         logger.info('test_2_2 start ...')
-        logger.info('test_2_2 hello,world')
         logger.warning('test_2_2 hello,world')
         logger.debug('test_2_2 hello,world')
         logger.error('test_2_2 hello,world')
@@ -676,7 +674,6 @@ class LogTestCase(unittest.TestCase):
     def test_3(self):
         logger = get_logger(logger_name='test2')
         logger.info('test_3 start ...')
-        logger.info('test_3 hello,world')
         logger.warning('test_3 hello,world')
         logger.debug('test_3 hello,world')
         logger.error('test_3 hello,world')

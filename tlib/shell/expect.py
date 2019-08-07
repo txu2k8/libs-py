@@ -11,8 +11,8 @@
 import os
 import sys
 
-import cup
-from cup.thirdp import pexpect
+import tlib
+from tlib.thirdp import pexpect
 
 
 __all__ = [
@@ -129,7 +129,7 @@ def go_with_scp(
         'remote_exitstatus': -1,
         'result': 'write host file fail'
     }
-    tmp_filename = cup.util.CGeneratorMan().get_uniqname()
+    tmp_filename = tlib.util.CGeneratorMan().get_uniqname()
     host_file = host_tmp + '/' + tmp_filename
     remote_file = remote_tmp + '/' + tmp_filename
     with open(host_file, 'w') as fhandle:
@@ -142,7 +142,7 @@ def go_with_scp(
     cmd = ' sh %s ' % remote_file
     ret = go_ex(hostname, username, passwd, cmd, timeout, b_print_stdout)
     cmd = ' rm -f %s ' % host_file
-    res = cup.shell.execshell(cmd, b_print_stdout)
+    res = tlib.shell.execshell(cmd, b_print_stdout)
     if res:
         ret['result'] = 'rm -f host_file fail, ret:%s' % res
         return ret

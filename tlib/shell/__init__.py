@@ -20,27 +20,27 @@ import traceback
 import subprocess
 import collections
 
-import cup
-from cup import err
-from cup.shell import expect
-from cup.shell import oper
+import tlib
+from tlib import err
+from tlib.shell import expect
+from tlib.shell import oper
 
-from cup.shell.oper import md5file
-from cup.shell.oper import kill9_byname
-from cup.shell.oper import del_if_exist
-from cup.shell.oper import execshell
-from cup.shell.oper import execshell_withpipe
-from cup.shell.oper import execshell_withpipe_exwitherr
-from cup.shell.oper import is_proc_alive
-from cup.shell.oper import forkexe_shell
-from cup.shell.oper import execshell_withpipe_ex
-from cup.shell.oper import execshell_withpipe_str
-from cup.shell.oper import ShellExec
-from cup.shell.oper import rmtree
-from cup.shell.oper import Asynccontent
+from tlib.shell.oper import md5file
+from tlib.shell.oper import kill9_byname
+from tlib.shell.oper import del_if_exist
+from tlib.shell.oper import execshell
+from tlib.shell.oper import execshell_withpipe
+from tlib.shell.oper import execshell_withpipe_exwitherr
+from tlib.shell.oper import is_proc_alive
+from tlib.shell.oper import forkexe_shell
+from tlib.shell.oper import execshell_withpipe_ex
+from tlib.shell.oper import execshell_withpipe_str
+from tlib.shell.oper import ShellExec
+from tlib.shell.oper import rmtree
+from tlib.shell.oper import Asynccontent
 
 
-_DEPRECATED_MSG = '''Plz use class cup.shell.ShellExec instead. Function %s
+_DEPRECATED_MSG = '''Plz use class tlib.shell.ShellExec instead. Function %s
  deprecated'''
 
 
