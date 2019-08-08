@@ -28,18 +28,22 @@ platform_parser.add_argument("--platform", required=True, action="store", dest="
                              choices=['vshphere', 'aws'], help="platform,default:None")
 
 
-def vmware_parser():
+def mail_parser():
     """
     vmware args
     :return:
     """
     arg_parser = argparse.ArgumentParser(add_help=False)
-    vmware_group = arg_parser.add_argument_group('VMWare arguments')
-    vmware_group.add_argument("--vc_ip", action="store", dest="vc_ip", default=None, help="vcenter ip,default:None")
-    vmware_group.add_argument("--vc_user", action="store", dest="vc_user", default=None,
-                              help="vcenter user,default:None(const.py define)")
-    vmware_group.add_argument("--vc_pwd", action="store", dest="vc_pwd", default=None,
-                              help="vcenter pwd,default:None(const.py define)")
+    mail_group = arg_parser.add_argument_group('MAIL arguments')
+    mail_group.add_argument("--host", action="store", dest="host", default="smtp.gmail.com",
+                            help="Mail server host,default:smtp.gmail.com")
+    mail_group.add_argument("--user", action="store", dest="user", default=None,
+                            help="Mail server user,default:None")
+    mail_group.add_argument("--password", action="store", dest="password", default="password",
+                            help="Mail server password,default:None")
+    mail_group.add_argument("--port", action="store", dest="port", default=465,
+                            help="Mail server port,default:465")
+    mail_group.set_defaults(tls=True)
 
     return arg_parser
 
@@ -50,12 +54,10 @@ def tc_log_parsers(subparsers):
     :param subparsers:
     :return:
     """
+    sub_parser = subparsers.add_parser('log', help='log.py test')
 
-    sub_parser = subparsers.add_parser('log', parents=[platform_parser, vmware_parser],
-                                       help='')
-
-    sub_parser.add_argument("--case", action="store", dest="case_list", default=['test_1'],
-                            choices=['test_1', 'test_2'], nargs='+', help="default:['test_1']")
+    sub_parser.add_argument("--case", action="store", dest="case_list", default=['all'],
+                            nargs='+', help="default:['all']")
     sub_parser.set_defaults(func=test_suite_common, suite='log')
 
 
@@ -66,11 +68,10 @@ def tc_mail_parsers(subparsers):
     :return:
     """
 
-    sub_parser = subparsers.add_parser('mail', parents=[platform_parser, vmware_parser],
-                                       help='')
+    sub_parser = subparsers.add_parser('mail', parents=[mail_parser()], help='mail.py test')
 
-    sub_parser.add_argument("--case", action="store", dest="case_list", default=['test_1'],
-                            choices=['test_1', 'test_2'], nargs='+', help="default:['test_1']")
+    sub_parser.add_argument("--case", action="store", dest="case_list", default=['all'],
+                            choices=['1', '2', '3'], nargs='+', help="default:['all']")
     sub_parser.set_defaults(func=test_suite_common, suite='mail')
 
 
@@ -82,34 +83,24 @@ def test_suite_common(args):
     else:
         raise Exception('Error suite')
 
-    case_name_list = []
-    for case in args.case_list:
-        case_name = "test_" + case
-        case_name_list.append(case_name)
+    if 'all' in args.case_list:
+        test_suite = unittest.TestSuite()
+        test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(CurrentTestCase))
+    else:
+        case_name_list = []
+        for case in args.case_list:
+            case_name = "test_" + case
+            case_name_list.append(case_name)
 
-    print("case_name_list:%s" % case_name_list)
-    # Load the test suite
-    test_suite = unittest.TestSuite(map(CurrentTestCase, case_name_list))
-    # test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(CurrentTestCase))
+        print("case_name_list:%s" % case_name_list)
+        # Load the test suite
+        test_suite = unittest.TestSuite(map(CurrentTestCase, case_name_list))
     return test_suite
 
 
 # =============================
 # set subparsers
 # =============================
-def set_subparsers_project(sub_parser):
-    """
-    set subparsers
-    :param sub_parser:
-    :return:
-    """
-
-    suite_parser = sub_parser.add_parser('suite', help='sub command of log test')
-    suite_parser.set_defaults(project='project')
-    suite_sub_parser = suite_parser.add_subparsers(help='log test suite')
-    set_subparsers_suite(suite_sub_parser)
-
-
 def set_subparsers_suite(sub_parser):
     """
     set subparsers

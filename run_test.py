@@ -49,9 +49,15 @@ def parse_arg():
     parser.add_argument("--mail_to", action="store", dest="mail_to", default=None, help="mail_to, split with ';'")
     parser.set_defaults(runner='StressRunner', project='ut')
     # Sub parser
-    subparsers = parser.add_subparsers(help='unit test')
-    from test.argument import set_subparsers_project
-    set_subparsers_project(subparsers)
+    subparsers = parser.add_subparsers(help='project: unit test')
+
+    # ----------------- cc sub-commands -----------------
+    # test_parser = subparsers.add_parser('test', help='sub command of test')
+    # test_parser.set_defaults(project='test')
+    #
+    # subparsers = test_parser.add_subparsers(help='unit test')
+    from test.argument import set_subparsers_suite
+    set_subparsers_suite(subparsers)
 
     return parser.parse_args()
 
