@@ -1,22 +1,14 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
+# @Time    : 2019/8/8 12:49
+# @Author  : Tao.Xu
+# @Email   : tao.xu2008@outlook.com
+
 #  ____  _                       ____
 # / ___|| |_ _ __ ___  ___ ___  |  _ \ _   _ _ __  _ __   ___ _ __
 # \___ \| __| '__/ _ \/ __/ __| | |_) | | | | '_ \| '_ \ / _ \ '__|
 #  ___) | |_| | |  __/\__ \__ \ |  _ <| |_| | | | | | | |  __/ |
 # |____/ \__|_|  \___||___/___/ |_| \_\\__,_|_| |_|_| |_|\___|_|
-#
-#                                                        version: v1.0.0
-#                                                             by: Tao.Xu
-#                                                           date: 1/31/2019
-#                                                      copyright: N/A
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
 
 """Define a HTML template for report customerization and generation.
 

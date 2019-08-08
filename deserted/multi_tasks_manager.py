@@ -1,8 +1,13 @@
-"""
-:author: Tao.Xu
+# !/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Time    : 2019/8/8 12:49
+# @Author  : Tao.Xu
+# @Email   : tao.xu2008@outlook.com
 
+"""
 MultiTasksManager class based on python threading lib is provided for multi-tasks in parallel.
 """
+
 from src.log import Logger
 from threading import Thread
 from queue import Queue

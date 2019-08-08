@@ -1,7 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*
-# Copyright: [CUP] - See LICENSE for details.
-# Authors: Guannan Ma (@mythmgn),
+# !/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Time    : 2019/8/8 12:49
+# @Author  : Tao.Xu
+# @Email   : tao.xu2008@outlook.com
+
 """
 :description:
     decorators related module
