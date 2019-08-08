@@ -2,6 +2,10 @@
 
 Please Visit **https://github.com/txu2008/TLIB** for more details
 
+Contact Me:
+1. Email: [tao.xu2008@outlook.com](tao.xu2008@outlook.com)
+2. Blog: https://txu2008.github.io/
+
 ## Quick Start
 
 ### 1. Download
@@ -27,8 +31,11 @@ Visit Wiki to see more details: https://github.com/txu2008/TLIB/wiki
 
 Visit Doc site to see py-docs: TODO
 
+Visit examples to see .examples/*
+
 ```python
 # Examples:
+
 # 1. Init logging logger
 from tlib import log
 my_logger = log.get_logger(logfile='test1.log', logger_name='test1', debug=True, reset_logger=True)
@@ -37,6 +44,21 @@ my_logger.warning('test_1 hello,world')
 my_logger.debug('test_1 hello,world')
 my_logger.error('test_1 hello,world')
 my_logger.critical('test_1 hello,world')
+
+# 2. stressrunner
+import unittest
+from tlib.stressrunner import StressRunner
+from test.test_mail import TestMail
+runner = StressRunner(
+        report_path='sr_test.log',
+        title='My unit test with stressrunner',
+        description='This demonstrates the report output by StressRunner.',
+        logger=my_logger, # support owner logging logger
+    )
+test_suite = unittest.TestSuite()
+test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMail))
+runner.run(test_suite)
+
 ```
 
 
@@ -63,7 +85,7 @@ https://github.com/txu2008/TLIB/wiki
 
 ```text
 tlib
-    |-- stressrunner/*          module              supper unittest framework, fit for stress test, report html, send email, etc.
+    |-- stressrunner/*          module              super unittest framework, fit for stress test, report html, send email, etc.
     |-- cache.py                module              Memory cache related module
     |-- decorators.py           module              Decorators of python
     |-- err.py                  module              Exception classes for TLIB

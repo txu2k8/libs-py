@@ -15,5 +15,5 @@ __all__ = [
 ]
 
 
-VERSION = '1.2.3'
+VERSION = '1.2.4'
 AUTHOR = 'tao.xu2008@outlook.com'

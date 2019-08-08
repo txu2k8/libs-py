@@ -85,7 +85,7 @@ https://github.com/txu2008/TLIB/wiki
 
 ```text
 tlib
-    |-- stressrunner/*          module              supper unittest framework, fit for stress test, report html, send email, etc.
+    |-- stressrunner/*          module              super unittest framework, fit for stress test, report html, send email, etc.
     |-- cache.py                module              Memory cache related module
     |-- decorators.py           module              Decorators of python
     |-- err.py                  module              Exception classes for TLIB
