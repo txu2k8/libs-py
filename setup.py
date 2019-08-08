@@ -84,7 +84,7 @@ setup(
         License :: OSI Approved :: MIT License
         Natural Language :: English
         Intended Audience :: Developers
-        Operating System :: WINDOWS
+        Operating System :: Microsoft :: Windows
         Operating System :: POSIX :: Linux
         Programming Language :: Python :: 2.7
         Programming Language :: Python :: 3
