@@ -59,7 +59,7 @@ setup(
     name=__name__,
     version=__version__,
     author=__author__,
-    # python_requires='>=3.4.0',
+    python_requires='>=2.6',
     install_requires=_read_requirements('requirements.txt'),
     description='Some own/observed great lib/ideas,common useful python libs',
     long_description=_read_file('README.md'),
