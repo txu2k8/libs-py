@@ -1,12 +1,12 @@
 #!/bin/bash                                                                                                                                                                                                   
 # ##########################################################################                           
-# Author: Guannan Ma                                                                                              
-# Brief:  Upload cup to pypi                                                                                             
+# Author: txu
+# Brief:  Upload tlib to pypi
 #                                                                                                      
 # Returns:                                                                                             
-#   succ: 0                                                                                            
+#   pass: 0
 #   fail: not 0                                                                                        
 # ##########################################################################   
-rm -rf ./build ./tlib.egg-info ./dist
-python setup.py bdist_wheel
+rm -rf ./tlib.egg-info ./dist
+python setup.py sdist
 twine upload  dist/*

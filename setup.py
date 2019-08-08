@@ -91,7 +91,7 @@ setup(
         ]
     },
     classifiers=textwrap.dedent("""
-        License :: MIT License,
+        License :: OSI Approved :: MIT License
         Natural Language :: English
         Intended Audience :: Developers
         Operating System :: WINDOWS
