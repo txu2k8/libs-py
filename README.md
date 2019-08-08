@@ -2,6 +2,10 @@
 
 Please Visit **https://github.com/txu2008/TLIB** for more details
 
+Contact Me:
+1. Email: [tao.xu2008@outlook.com](tao.xu2008@outlook.com)
+2. Blog: https://txu2008.github.io/
+
 ## Quick Start
 
 ### 1. Download
