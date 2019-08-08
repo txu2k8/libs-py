@@ -18,14 +18,16 @@
 Test suites run
 """
 
+import os
 import sys
 import argparse
 import unittest
 from tlib.stressrunner import StressRunner
 from tlib import log
 
-
-my_logger = log.get_logger(logfile='./test1/test_1.log', logger_name='test', debug=True, reset_logger=True)
+LOG_PATH = os.path.join(os.getcwd(), 'log')
+LOGFILE_PATH = os.path.join(LOG_PATH, 'run_test.log')
+my_logger = log.get_logger(logfile=LOGFILE_PATH, logger_name='test', debug=True, reset_logger=True)
 
 
 def parse_arg():
@@ -82,7 +84,8 @@ def main_1():
         # run with StressRunner -- report html
         # run with StressRunner -- report html
         runner = StressRunner(
-            report_path='./report/',
+            report_path=LOG_PATH,
+            report_name='run_test_report.html',
             title='My unit test',
             description='This demonstrates the report output by StressRunner.',
             logger=my_logger
@@ -107,7 +110,7 @@ def main_2():
 
     # output to a file
     runner = StressRunner(
-        report_path='./report/',
+        report_path=LOG_PATH,
         title='My unit test',
         description='This demonstrates the report output by StressRunner.',
         logger=my_logger

@@ -38,8 +38,8 @@ class TestMail(unittest.TestCase):
         self.attachments = []  # ['./log/debug.log']
 
         self.host = "smtp.gmail.com"
-        self.user = "txu@panzura.com"
-        self.password = "pass@0613"
+        self.user = "xx@gmail.com"
+        self.password = "password"
         self.port = 465
         self.tls = True
 
@@ -70,6 +70,7 @@ class TestMail(unittest.TestCase):
 
     def test_3(self):
         my_logger.log(21, 'Test for mutt_sendmail')
+        # mutt_sendmail()
         pass
 
 
