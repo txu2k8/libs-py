@@ -33,8 +33,7 @@ def _read_file(filename):
 
 
 def _read_requirements(filename):
-    return [line.strip() for line in _read_file(filename).splitlines()
-            if not line.startswith('#')]
+    return [line.strip() for line in _read_file(filename).splitlines() if not line.startswith('#')]
 
 
 def _find_packages(prefix=''):
