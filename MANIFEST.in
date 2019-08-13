@@ -9,3 +9,4 @@ global-exclude *.so *.dylib
 global-exclude deserted/*
 global-exclude */log/*
 global-exclude */report/*
+global-exclude vim-config/*
