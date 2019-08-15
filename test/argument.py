@@ -103,7 +103,7 @@ def set_subparsers_suite(sub_parser):
 
 if __name__ == "__main__":
     pass
-    parser = vmware_parser()
+    parser = mail_parser()
     p = parser.parse_args()
     print(p)
     print(p.__dict__)
