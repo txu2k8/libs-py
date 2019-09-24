@@ -15,7 +15,7 @@ from tlib import decorators
 from tlib import err
 from tlib import mail
 from tlib import shell
-from tlib import util
+from tlib.utils import util
 from tlib import platforms
 from tlib import version
 

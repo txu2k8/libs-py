@@ -130,7 +130,7 @@ def go_with_scp(
         'remote_exitstatus': -1,
         'result': 'write host file fail'
     }
-    tmp_filename = tlib.util.CGeneratorMan().get_uniqname()
+    tmp_filename = tlib.utils.util.CGeneratorMan().get_uniqname()
     host_file = host_tmp + '/' + tmp_filename
     remote_file = remote_tmp + '/' + tmp_filename
     with open(host_file, 'w') as fhandle:

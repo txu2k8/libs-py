@@ -13,7 +13,7 @@ import collections
 import contextlib
 
 import tlib
-from tlib.util import thread
+from tlib.utils.util import thread
 
 
 class KvCache(object):
