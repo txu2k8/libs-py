@@ -15,8 +15,10 @@ import unittest
 from tlib.stressrunner import StressRunner
 from tlib import log
 
-LOG_PATH = os.path.join(os.getcwd(), 'log')
+CUR = os.getcwd()
+LOG_PATH = os.path.join(r'C:\Users\user\Documents', 'log')
 LOGFILE_PATH = os.path.join(LOG_PATH, 'run_test.log')
+REPORT_PATH = LOGFILE_PATH.replace('.log', '.html')
 my_logger = log.get_logger(logfile=LOGFILE_PATH, logger_name='test', debug=True, reset_logger=True)
 
 
@@ -32,7 +34,7 @@ def parse_arg():
                         help="debug mode,will not send email")
     parser.add_argument("--run_time", action="store", dest="run_time", default=60*60*24*3, type=int,
                         help="run time(s),default:60*60*24*3 (3 days)")
-    parser.add_argument("--run_iteration", action="store", dest="run_iteration", default=0, type=int,
+    parser.add_argument("--iteration", action="store", dest="run_iteration", default=0, type=int,
                         help="run_iteration(0:keep run forever),default:0")
     parser.add_argument("--sys_user", action="store", dest="sys_user", default="root", help="system user")
     parser.add_argument("--sys_pwd", action="store", dest="sys_pwd", default="password", help="system password")
@@ -74,8 +76,7 @@ def main_1():
         # run with StressRunner -- report html
         # run with StressRunner -- report html
         runner = StressRunner(
-            report_path=LOG_PATH,
-            report_name='run_test_report.html',
+            report_path=REPORT_PATH,
             title='My unit test',
             description='This demonstrates the report output by StressRunner.',
             logger=my_logger
@@ -100,7 +101,7 @@ def main_2():
 
     # output to a file
     runner = StressRunner(
-        report_path=LOG_PATH,
+        report_path=REPORT_PATH,
         title='My unit test',
         description='This demonstrates the report output by StressRunner.',
         logger=my_logger
