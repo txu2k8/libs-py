@@ -23,7 +23,7 @@ from tlib.retry import retry, retry_call
 # =============================
 # --- Global Value
 # =============================
-my_logger = log.get_logger()
+logger = log.get_logger()
 # --- OS constants
 POSIX = os.name == "posix"
 WINDOWS = os.name == "nt"
@@ -57,7 +57,7 @@ def subprocess_popen_cmd(cmd_spec, output=True, timeout=7200):
     :return:
     """
 
-    my_logger.info('Execute: {cmds}'.format(cmds=cmd_spec))
+    logger.info('Execute: {cmds}'.format(cmds=cmd_spec))
     try:
         p = subprocess.Popen(cmd_spec, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         t_beginning = time.time()
@@ -79,7 +79,7 @@ def subprocess_popen_cmd(cmd_spec, output=True, timeout=7200):
                 std_out_err = escape(stdout)
             else:
                 std_out_err = escape(stderr)
-                my_logger.warning('Output: rc={0}, stdout/stderr:\n{1}'.format(rc, std_out_err))
+                logger.warning('Output: rc={0}, stdout/stderr:\n{1}'.format(rc, std_out_err))
         else:
             std_out_err = ''
         # p.stdout.close()
@@ -105,7 +105,7 @@ def run_cmd(cmd_spec, expected_rc=0, output=True, tries=1, delay=3, timeout=7200
 
     method_name = inspect.stack()[1][3]    # Get name of the calling method, returns <methodName>'
     rc, output = retry_call(subprocess_popen_cmd, fkwargs={'cmd_spec': cmd_spec, 'output': output, 'timeout': timeout},
-                            tries=tries, delay=delay, logger=my_logger)
+                            tries=tries, delay=delay, logger=logger)
 
     if isinstance(expected_rc, str) and expected_rc.upper() == 'IGNORE':
         return rc, output
@@ -139,7 +139,7 @@ def paramiko_ssh_cmd(ip, username, password, cmd_spec, key_file=None, timeout=72
     if docker_image:
         cmd_spec = "docker run -i --rm --network host -v /dev:/dev -v /etc:/etc --privileged {image} bash " \
                    "-c '{cmd}'".format(image=docker_image, cmd=cmd_spec)
-    my_logger.info('Execute: ssh {0}@{1} {2}'.format(username, ip, cmd_spec))
+    logger.info('Execute: ssh {0}@{1} {2}'.format(username, ip, cmd_spec))
     try:
         if key_file is not None:
             pkey = paramiko.RSAKey.from_private_key_file(key_file)
@@ -187,7 +187,7 @@ def ssh_cmd(ip, username, password, cmd_spec, expected_rc=0, key_file=None, time
                                          'key_file': key_file,
                                          'timeout': timeout,
                                          'get_pty': get_pty,
-                                         'docker_image': docker_image}, tries=tries, delay=delay, logger=my_logger)
+                                         'docker_image': docker_image}, tries=tries, delay=delay, logger=logger)
     rc = -1 if stderr else 0
     output = stdout + stderr if stderr else stdout
     if isinstance(expected_rc, str) and expected_rc.upper() == 'IGNORE':
@@ -257,7 +257,7 @@ def remote_scp_put(ip, local_path, remote_path, username, password, key_file=Non
     :return:
     """
 
-    my_logger.info('scp %s %s@%s:%s' % (local_path, username, ip, remote_path))
+    logger.info('scp %s %s@%s:%s' % (local_path, username, ip, remote_path))
     ssh = paramiko.SSHClient()
     # ssh.load_system_host_keys()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -290,7 +290,7 @@ def remote_scp_get(ip, local_path, remote_path, username, password, key_file=Non
     :return:
     """
 
-    my_logger.debug('scp %s@%s:%s %s' % (username, ip, remote_path, local_path))
+    logger.debug('scp %s@%s:%s %s' % (username, ip, remote_path, local_path))
 
     ssh = paramiko.SSHClient()
     ssh.load_system_host_keys()
@@ -358,13 +358,13 @@ def get_remote_hostname(ip, username, password):
     :return:hostname
     """
 
-    my_logger.info('Call get_remote_hostname for <%s>...' % ip)
+    logger.info('Call get_remote_hostname for <%s>...' % ip)
     cmd = "hostname"
     try:
         rc, output = ssh_cmd(ip, username, password, cmd)
         hostname = output.strip('\n')
     except Exception as e:
-        my_logger.error(e)
+        logger.error(e)
         return False
     else:
         return hostname

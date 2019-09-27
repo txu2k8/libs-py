@@ -15,7 +15,7 @@ from tlib.stressrunner import StressRunner
 from tlib import log
 
 
-my_logger = log.get_logger()
+logger = log.get_logger()
 
 
 class TestLog(unittest.TestCase):
@@ -26,7 +26,7 @@ class TestLog(unittest.TestCase):
         pass
 
     def test_1(self):
-        my_logger.log(21, 'test_1 Describe: Test Case for log.py')
+        logger.log(21, 'test_1 Describe: Test Case for log.py')
         log_file = "test_1.log"
         log.basic_config(log_file)
         logger = logging.getLogger(__name__)
@@ -37,12 +37,12 @@ class TestLog(unittest.TestCase):
         logger.critical('test_1 hello,world')
 
     def test_2(self):
-        my_logger.log(21, 'test_1 Describe: Test Case for log.py')
-        my_logger.info('test_2 info')
-        my_logger.debug('test_2 debug')
-        my_logger.warning('test_2 warning')
-        my_logger.error('test_2 error')
-        my_logger.critical('test_2 critical')
+        logger.log(21, 'test_1 Describe: Test Case for log.py')
+        logger.info('test_2 info')
+        logger.debug('test_2 debug')
+        logger.warning('test_2 warning')
+        logger.error('test_2 error')
+        logger.critical('test_2 critical')
 
     def test_3(self):
         logger = log.get_logger(logfile='test_3.log', logger_name='test3', debug=True, reset_logger=True)
@@ -79,6 +79,6 @@ if __name__ == '__main__':
         report_path='./report/',
         title='My unit test',
         description='This demonstrates the report output by StressRunner.',
-        # logger=my_logger
+        # logger=logger
     )
     runner.run(test_suite)

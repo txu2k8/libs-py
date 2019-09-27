@@ -38,12 +38,12 @@ Visit examples to see .examples/*
 
 # 1. Init logging logger
 from tlib import log
-my_logger = log.get_logger(logfile='test1.log', logger_name='test1', debug=True, reset_logger=True)
-my_logger.info('test_1 start ...')
-my_logger.warning('test_1 hello,world')
-my_logger.debug('test_1 hello,world')
-my_logger.error('test_1 hello,world')
-my_logger.critical('test_1 hello,world')
+logger = log.get_logger(logfile='test1.log', logger_name='test1', debug=True, reset_logger=True)
+logger.info('test_1 start ...')
+logger.warning('test_1 hello,world')
+logger.debug('test_1 hello,world')
+logger.error('test_1 hello,world')
+logger.critical('test_1 hello,world')
 
 # 2. stressrunner
 import unittest
@@ -53,7 +53,7 @@ runner = StressRunner(
         report_path='sr_test.log',
         title='My unit test with stressrunner',
         description='This demonstrates the report output by StressRunner.',
-        logger=my_logger, # support owner logging logger
+        logger=logger, # support owner logging logger
     )
 test_suite = unittest.TestSuite()
 test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMail))

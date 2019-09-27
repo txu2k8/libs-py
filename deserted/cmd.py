@@ -23,7 +23,7 @@ from src import util
 # =============================
 # --- Global
 # =============================
-my_logger = log.get_logger()
+logger = log.get_logger()
 WINDOWS = os.name == "nt"
 
 if WINDOWS:
@@ -65,7 +65,7 @@ class Cmd(object):
         for x in range(0, retry_max+1):
             print('--------------------------------------')
             print(cmd_spec)
-            #my_logger.info('Execute: {cmds}'.format(cmds=' '.join(cmd_spec)))
+            #logger.info('Execute: {cmds}'.format(cmds=' '.join(cmd_spec)))
             try:
                 p = subprocess.Popen(cmd_spec, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                 if output:
@@ -74,13 +74,13 @@ class Cmd(object):
                         (p.returncode, stderr.decode('UTF-8'))
                 else:
                     (rtn_code, std_out_err) = (p.returncode, '')
-                # my_logger.debug('Output: {rtn}'.format(rtn=(rtn_code, std_out_err)))
-                my_logger.info('Output: returncode {r_code}, stdout/stderr:\n{r_out}'.format(r_code=rtn_code,
+                # logger.debug('Output: {rtn}'.format(rtn=(rtn_code, std_out_err)))
+                logger.info('Output: returncode {r_code}, stdout/stderr:\n{r_out}'.format(r_code=rtn_code,
                                                                                              r_out=std_out_err))
                 return rtn_code, std_out_err
 
             except Exception as e:
-                my_logger.warning('(retry:%d/%d)Failed to run command "%s"\n%s' % (x, retry_max, cmd_spec, e))
+                logger.warning('(retry:%d/%d)Failed to run command "%s"\n%s' % (x, retry_max, cmd_spec, e))
                 util.sleep_progressbar(interval)
         else:
             raise Exception('Failed to run command "{cmds}"'.format(cmds=cmd_spec))
@@ -92,7 +92,7 @@ class Cmd(object):
         :return:dict(return_info)
         """
 
-        my_logger.debug('Subprocess.check_output: {cmd}'.format(cmd=cmd_spec))
+        logger.debug('Subprocess.check_output: {cmd}'.format(cmd=cmd_spec))
         rtn_dict = {'stdout': '', 'stderr': '', 'returncode': 0}
         try:
             result = subprocess.check_output(cmd_spec, stderr=subprocess.STDOUT, shell=True)
@@ -101,7 +101,7 @@ class Cmd(object):
             rtn_dict['stderr'] = error.output.decode('UTF-8')
             rtn_dict['returncode'] = error.returncode
         except Exception as e:
-            my_logger.error('Exception occurred: {err}'.format(err=e))
+            logger.error('Exception occurred: {err}'.format(err=e))
             rtn_dict['returncode'] = -1
 
         return rtn_dict
@@ -168,7 +168,7 @@ class DosCmd(Cmd):
 
         cmd = ['robocopy', '/e', '/r:5', src_path, dst_path]
         rc, output = self.run(cmd)
-        # my_logger.debug('$ %s\n%s' % (cmd, output))
+        # logger.debug('$ %s\n%s' % (cmd, output))
         """ Any value greater than 8 indicates that there was at least one failure during the robocopy operation """
         if rc > 8:
             raise Exception('DosCmd: Command failed...\n$ %s\nError %d: %s' % (' '.join(cmd), rc, output))
@@ -197,7 +197,7 @@ class DosCmd(Cmd):
 
         cmd = ['icacls', path]
         (rc, output) = self.run(cmd)
-        # my_logger.debug('$ %s\n%s' % (cmd, output))
+        # logger.debug('$ %s\n%s' % (cmd, output))
         if rc != 0 or output is None or len(output) == 0:
             raise Exception('DosCmd: Command failed...\n$ %s\nError %d: %s' % (' '.join(cmd), rc, output))
 
@@ -212,7 +212,7 @@ class DosCmd(Cmd):
                 acl_map[perm[0]] = []
             acl_map[perm[0]].append(perm[1])
 
-        my_logger.info('ACL_Map=%s' % acl_map)
+        logger.info('ACL_Map=%s' % acl_map)
         return acl_map
 
     def remove_acl(self, path, user_name, mode=None):
@@ -227,7 +227,7 @@ class DosCmd(Cmd):
         mode = '' if mode is None else ':%s' % mode
         cmd = ['icacls', path, '/remove%s' % mode, user_name]
         rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # my_logger.debug('$ %s\n%s' % (cmd, output))
+        # logger.debug('$ %s\n%s' % (cmd, output))
         return output
 
     def change_inheritance(self, path, op_code='e'):
@@ -240,7 +240,7 @@ class DosCmd(Cmd):
 
         cmd = ['icacls', path, '/inheritance:%s' % op_code]
         rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # my_logger.debug('$ %s\n%s' % (cmd, output))
+        # logger.debug('$ %s\n%s' % (cmd, output))
         return output
 
     def run_dos_attr(self, path, attr_spec, op):
@@ -263,7 +263,7 @@ class DosCmd(Cmd):
             cmd.append('%s%s' % (op, attr))
         cmd.append(path)
         rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # my_logger.debug('$ %s\n%s' % (' '.join(cmd), output))
+        # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
         return output
 
     def set_dos_attr(self, path, attr_spec):
@@ -307,7 +307,7 @@ class DosCmd(Cmd):
 
         cmd = ['attrib', path]
         rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # my_logger.debug('$ %s\n%s' % (' '.join(cmd), output))
+        # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
 
         attr_spec = ''.join(output.split()[:-1])
         return attr_spec
@@ -322,7 +322,7 @@ class DosCmd(Cmd):
 
         cmd = ['icacls', path, '/setowner', owner]
         rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # my_logger.debug('%s\n%s' % (' '.join(cmd), output))
+        # logger.debug('%s\n%s' % (' '.join(cmd), output))
         return output
 
     def get_owner(self, path):
@@ -334,7 +334,7 @@ class DosCmd(Cmd):
 
         cmd = ['dir', '/q', path]
         rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # my_logger.debug('%s\n%s' % (' '.join(cmd), output))
+        # logger.debug('%s\n%s' % (' '.join(cmd), output))
 
         owner = None
         dpath, fname = os.path.split(path)
@@ -379,12 +379,12 @@ class DosCmd(Cmd):
 
         previous_versions = []
         rc, output = self.run(cmd)
-        # my_logger.debug('$ %s\n%s' % (' '.join(cmd), output))
+        # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
         if rc != 0:
             search_str = "Failed to query shadow copies"
             for line in output.split('\n'):
                 if line.find(search_str) >= 0:
-                    my_logger.info(line)
+                    logger.info(line)
                     return previous_versions
 
             raise Exception('DosCmd: Command failed...\n$ %s\nError %d: %s' % (' '.join(cmd), rc, output))
@@ -426,7 +426,7 @@ class DosCmd(Cmd):
                             'pvPath': m.group(3)
                         })
 
-        my_logger.info('previousVersions=%s' % previous_versions)
+        logger.info('previousVersions=%s' % previous_versions)
         return previous_versions
 
     def copy_previous_version(self, path, destination, version):
@@ -445,7 +445,7 @@ class DosCmd(Cmd):
             print(DosCmd()._volrest)
             cmd = [DosCmd()._volrest, '/E', '/S', destination, path]
             rc, output = self.cmd_runner(cmd, expected_rc=0)
-            # my_logger.debug('$ %s\n%s' % (' '.join(cmd), output))
+            # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
             return rc
         else:
             raise Exception('DosCmd: Could not copy PVs of [%s] in [%s] as it\'s not a dirpath' % (path, destination))
@@ -477,7 +477,7 @@ class DosCmd(Cmd):
 
         cmd = ['taskkill', '/f', '/im', proc_name]
         rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # my_logger.info('$ %s\n%s' % (cmd, output))
+        # logger.info('$ %s\n%s' % (cmd, output))
         return rc
 
     def create_archive(self, archiver, atype, source, archive):
@@ -494,7 +494,7 @@ class DosCmd(Cmd):
         cmd = [archiver, 'a',  archive_type, archive, source]
 
         rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # my_logger.debug('$ %s\n%s' % (' '.join(cmd), output))
+        # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
         return rc
 
     def edit_archive(self, archiver, archive, op_code, input):
@@ -511,7 +511,7 @@ class DosCmd(Cmd):
         cmd = [archiver, op_code_cmd_map[op_code], archive, input]
 
         rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # my_logger.debug('$ %s\n%s' % (' '.join(cmd), output))
+        # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
         return rc
 
     def extract_archive(self, archiver, archive, path):
@@ -527,7 +527,7 @@ class DosCmd(Cmd):
         cmd = [archiver, 'x', archive, epath]
 
         rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # my_logger.debug('$ %s\n%s' % (' '.join(cmd), output))
+        # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
         return rc
 
     def open_with_app(self, application, path):
@@ -556,15 +556,15 @@ class DosCmd(Cmd):
 
         cmd = ['ping', connection]
         rc, output = self.run(cmd)
-        # my_logger.debug('$ %s\n%s' % (cmd, output))
+        # logger.debug('$ %s\n%s' % (cmd, output))
 
         cmd = ['nslookup', connection]
         rc, output = self.run(cmd)
-        # my_logger.debug('$ %s\n%s' % (cmd, output))
+        # logger.debug('$ %s\n%s' % (cmd, output))
 
         cmd = ['netstat', '-rn']
         rc, output = self.run(cmd)
-        # my_logger.debug('$ %s\n%s' % (cmd, output))
+        # logger.debug('$ %s\n%s' % (cmd, output))
         return 0
 
     def list_mapped_drive(self):
@@ -584,7 +584,7 @@ class DosCmd(Cmd):
         :return:
         """
 
-        my_logger.info("drive: %s" % drive)
+        logger.info("drive: %s" % drive)
         cmd = ['dir', drive]
         rc, output = self.cmd_runner(cmd, expected_rc=0)
         return rc, output
@@ -906,9 +906,9 @@ class DosCmd(Cmd):
         foundInADGroup = self._checkADQueryResults(cmd, 'user', domainName, domainSuffix, userName)
 
         if foundInADGroup:
-            my_logger.info('User %s\%s found in %s group' % (domainName, userName, groupName))
+            logger.info('User %s\%s found in %s group' % (domainName, userName, groupName))
         else:
-            my_logger.info('User %s\%s not found in %s group' % (domainName, userName, groupName))
+            logger.info('User %s\%s not found in %s group' % (domainName, userName, groupName))
 
         return foundInADGroup
 
@@ -933,9 +933,9 @@ class DosCmd(Cmd):
                 break
 
         if isAcctPresent:
-            my_logger.info('Account %s\%s is present in AD' % (domainName, acctName))
+            logger.info('Account %s\%s is present in AD' % (domainName, acctName))
         else:
-            my_logger.info('User %s\%s is not present in AD' % (domainName, acctName))
+            logger.info('User %s\%s is not present in AD' % (domainName, acctName))
 
         return isAcctPresent
 
@@ -1122,7 +1122,7 @@ class DosCmd(Cmd):
         """
         cmd = ['dfsutil', 'Property', 'Insite', '\\\\%s\%s\%s' % (adFQDN, DFSRootName, shareName)]
         rc, output = self.CmdRunner(cmd)
-        my_logger.info('output: %s' % (output))
+        logger.info('output: %s' % (output))
         ret = None
 
         blankLineRegx = re.compile('^$')
@@ -1266,8 +1266,8 @@ class DosCmd(Cmd):
                 rc, output = self.CmdRunner(cmd, 'IGNORE')
             if rc not in [0, 1326]:
                 overall_rc = rc
-                my_logger.error('%s' % (output))
-            my_logger.info('dfsutil doing %s returned %d' % (_flushOp, rc))
+                logger.error('%s' % (output))
+            logger.info('dfsutil doing %s returned %d' % (_flushOp, rc))
 
         # Also, flush other caches
         # Error code 1326 has been added in the list of success codes as its source
@@ -1293,8 +1293,8 @@ class DosCmd(Cmd):
                 rc, output = self.CmdRunner(cmd, 'IGNORE')
             if rc not in [0, 1326]:
                 overall_rc = rc
-                my_logger.error('%s' % (output))
-            my_logger.info('dfsutil flushing %s cache returned %d' % (_cacheType, rc))
+                logger.error('%s' % (output))
+            logger.info('dfsutil flushing %s cache returned %d' % (_cacheType, rc))
 
         return overall_rc
 
@@ -1305,13 +1305,13 @@ class MacCmd(Cmd):
     rc = 0
     def Run(self, cmdSpec):
         try:
-            # my_logger.info('$ %s' % ' '.join(cmdSpec))
+            # logger.info('$ %s' % ' '.join(cmdSpec))
             output = check_output(cmdSpec)
             print('$ %s\n%s' % (cmdSpec, output))
             self.output = output
             return 0, output
         except CalledProcessError as e:
-            # my_logger.error("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
+            # logger.error("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
             print("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
             raise Exception(e)
 
@@ -1344,7 +1344,7 @@ class MacCmd(Cmd):
         cmd = ['cp', '-R', srcPath, dstPath]
         rc, output = self.Run(cmd)
         if rc != 0:
-            my_logger.info('output %s' % output)
+            logger.info('output %s' % output)
         return rc
 
     def CreateExcelWorkbook(self, filePath):
@@ -1368,10 +1368,10 @@ class MacCmd(Cmd):
         cmdSpec = ["osascript", scriptPath, filePath]
         try:
             self.rc, self.output = self.Run(cmdSpec)
-            my_logger.info('$ %s\n%s' % (cmdSpec, self.output))
+            logger.info('$ %s\n%s' % (cmdSpec, self.output))
         except CalledProcessError as e:
             print("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
-            my_logger.info("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
+            logger.info("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
             self.rc, self.output = e.returncode, e.output
 
     def GrantAccessHandler(self, app):
@@ -1431,10 +1431,10 @@ class MacCmd(Cmd):
         cmdSpec = ["osascript", scriptPath, filePath]
         try:
             self.rc, self.output = self.Run(cmdSpec)
-            my_logger.info('$ %s\n%s' % (cmdSpec, self.output))
+            logger.info('$ %s\n%s' % (cmdSpec, self.output))
         except CalledProcessError as e:
             print("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
-            my_logger.info("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
+            logger.info("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
 
     def WritePpt(self, filePath, inData):
         scriptPath = os.path.join(self.SCRIPTSDIR, "mspptwrite.scpt")
@@ -1463,7 +1463,7 @@ class MacCmd(Cmd):
             self.rc, self.output = self.Run(cmdSpec)
         except CalledProcessError as e:
             print("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
-            my_logger.info("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
+            logger.info("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
             self.rc, self.output = e.returncode, e.output
 
     def SavePpt(self, filePath, newFilePath):
@@ -1497,10 +1497,10 @@ class MacCmd(Cmd):
         cmdSpec = ["osascript", scriptPath, filePath, inData]
         try:
             self.rc, self.output = self.Run(cmdSpec)
-            my_logger.info('$ %s\n%s' % (cmdSpec, self.output))
+            logger.info('$ %s\n%s' % (cmdSpec, self.output))
         except CalledProcessError as e:
             print("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
-            my_logger.info("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
+            logger.info("cmd %s, return code %s, message %s" % (cmdSpec, e.returncode, e.output))
             self.rc, self.output = e.returncode, e.output
 
 

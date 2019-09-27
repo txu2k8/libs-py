@@ -25,7 +25,7 @@ from tlib import decorators
 from tlib import shell
 
 
-my_logger = log.get_logger()
+logger = log.get_logger()
 
 
 # ===================================================================
@@ -188,7 +188,7 @@ class SmtpMailer(object):
             attrs = []
         for attached in attrs:
             if not os.path.isfile(attached):
-                my_logger.warn('attached is not a file:%s' % attached)
+                logger.warn('attached is not a file:%s' % attached)
                 continue
             # Guess the content type based on the file's extension.  Encoding
             # will be ignored, although we should check for simple things like
@@ -230,7 +230,7 @@ class SmtpMailer(object):
                 outer.attach(msg)
             # pylint: disable=W0703
             except Exception as exception:
-                my_logger.warn(
+                logger.warn(
                     'failed to attach %s, errmsg:%s. Will skip it' % (
                         attached, str(exception)
                     )
@@ -365,5 +365,5 @@ def mutt_sendmail(m_to, subject, body, attach, content_is_html=False):
     if ret_dic['returncode'] == 0:
         return True
     else:
-        my_logger.warn(ret_dic['stderr'])
+        logger.warn(ret_dic['stderr'])
         return False

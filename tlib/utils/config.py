@@ -27,7 +27,7 @@ else:
 # =============================
 # --- Global Value
 # =============================
-my_logger = log.get_logger()
+logger = log.get_logger()
 
 
 def get_config_ini(ini_file, section, key):
@@ -151,7 +151,7 @@ def json_load(json_file_path):
     :return:
     """
 
-    my_logger.log(21, 'Load json {0}'.format(json_file_path))
+    logger.log(21, 'Load json {0}'.format(json_file_path))
     try:
         with open(json_file_path, 'r') as f:
             json_info = json.load(f)

@@ -19,7 +19,7 @@ from tlib.retry import retry
 # =============================
 # --- Global Value
 # =============================
-my_logger = log.get_logger()
+logger = log.get_logger()
 # --- OS constants
 POSIX = os.name == "posix"
 WINDOWS = os.name == "nt"
@@ -35,9 +35,9 @@ def print_for_call(func):
 
     @wraps(func)
     def _wrapped(*args, **kwargs):
-        my_logger.info('Enter {name}.'.format(name=func.__name__))
+        logger.info('Enter {name}.'.format(name=func.__name__))
         rtn = func(*args, **kwargs)
-        my_logger.info('Exit from {name}. result: {rtn_code}'.format(name=func.__name__, rtn_code=rtn))
+        logger.info('Exit from {name}. result: {rtn_code}'.format(name=func.__name__, rtn_code=rtn))
         return rtn
 
     return _wrapped
@@ -122,7 +122,7 @@ def create_file(path_name, total_size='4k', line_size=128, mode='w+'):
     :return:
     """
 
-    my_logger.info('>> Create file: {0}'.format(path_name))
+    logger.info('>> Create file: {0}'.format(path_name))
     original_path = os.path.split(path_name)[0]
     if not os.path.isdir(original_path):
         try:
@@ -135,7 +135,7 @@ def create_file(path_name, total_size='4k', line_size=128, mode='w+'):
     unaligned_size = size % line_size
 
     with open(path_name, mode) as f:
-        my_logger.info("write file: {0}".format(path_name))
+        logger.info("write file: {0}".format(path_name))
         for line_num in range(0, line_count):
             random_sting = generate_random_string(line_size - 2 - len(str(line_num))) + '\n'
             f.write('{line_num}:{random_s}'.format(line_num=line_num, random_s=random_sting))
@@ -196,7 +196,7 @@ def hash_md5(f_name):
     :param f_name: file full path
     :return:(string) md5_value 32-bit hexadecimal string.
     """
-    my_logger.debug('Get MD5: {0}'.format(f_name))
+    logger.debug('Get MD5: {0}'.format(f_name))
     try:
         h_md5 = hashlib.md5()
         with open(f_name, "rb") as f:

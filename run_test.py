@@ -19,7 +19,7 @@ CUR = os.getcwd()
 LOG_PATH = os.path.join(r'C:\Users\user\Documents', 'log')
 LOGFILE_PATH = os.path.join(LOG_PATH, 'run_test.log')
 REPORT_PATH = LOGFILE_PATH.replace('.log', '.html')
-my_logger = log.get_logger(logfile=LOGFILE_PATH, logger_name='test', debug=True, reset_logger=True)
+logger = log.get_logger(logfile=LOGFILE_PATH, logger_name='test', debug=True, reset_logger=True)
 
 
 def parse_arg():
@@ -62,8 +62,8 @@ def main_1():
     args = parse_arg()
     command = 'python ' + ' '.join(sys.argv)
 
-    my_logger.info('Test args:\n{0}'.format(args))
-    my_logger.info("Test command:\n{cmd}".format(cmd=command))
+    logger.info('Test args:\n{0}'.format(args))
+    logger.info("Test command:\n{cmd}".format(cmd=command))
 
     # -----------------------------
     # --- Run unittest suite
@@ -79,7 +79,7 @@ def main_1():
             report_path=REPORT_PATH,
             title='My unit test',
             description='This demonstrates the report output by StressRunner.',
-            logger=my_logger
+            logger=logger
         )
 
     # get unittest test suite and then run unittest case
@@ -104,7 +104,7 @@ def main_2():
         report_path=REPORT_PATH,
         title='My unit test',
         description='This demonstrates the report output by StressRunner.',
-        logger=my_logger
+        logger=logger
     )
     runner.run(test_suite)
 

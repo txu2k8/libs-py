@@ -317,12 +317,12 @@ class LogTestCase(unittest.TestCase):
         logger_s.debug('summary: hello,world')
 
     def test_3(self):
-        my_logger, summary_logger = get_logger('C:\\test\\test.log', output_summary=True)
-        my_logger1, summary_logger1 = get_logger(output_summary=True)
-        my_logger.info('info 1111111')
-        my_logger.log(21, 'level-21 1111111')
+        logger, summary_logger = get_logger('C:\\test\\test.log', output_summary=True)
+        logger1, summary_logger1 = get_logger(output_summary=True)
+        logger.info('info 1111111')
+        logger.log(21, 'level-21 1111111')
         summary_logger.error('summary error: 22222222')
-        my_logger1.info('info 1111111')
+        logger1.info('info 1111111')
         summary_logger1.error('summary error: 22222222')
 
 

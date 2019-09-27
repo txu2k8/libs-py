@@ -26,7 +26,7 @@ else:
 # =============================
 # --- Global Value
 # =============================
-my_logger = log.get_logger()
+logger = log.get_logger()
 
 
 # 字符处理
@@ -184,7 +184,7 @@ def sort_dict(dict_data, base='key', reverse=False):
     elif base == 'value':
         return sorted(dict_data.items(), key=lambda d: d[1], reverse=reverse)
     else:
-        my_logger.error("Please input the correct base value, should be 'key' or 'value'")
+        logger.error("Please input the correct base value, should be 'key' or 'value'")
         return False
 
 

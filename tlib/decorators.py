@@ -24,7 +24,7 @@ __all__ = [
     'py_versioncheck'
 ]
 
-my_logger = log.get_logger()
+logger = log.get_logger()
 
 
 class Singleton(object):
@@ -57,9 +57,9 @@ def print_for_call(func):
     """
 
     def wrapper_func(*args, **kwargs):
-        my_logger.info('Enter {0}.'.format(func.__name__))
+        logger.info('Enter {0}.'.format(func.__name__))
         rtn = func(*args, **kwargs)
-        my_logger.info('Exit from {0}. result: {1}'.format(func.__name__, rtn))
+        logger.info('Exit from {0}. result: {1}'.format(func.__name__, rtn))
         return rtn
 
     return wrapper_func
@@ -212,7 +212,7 @@ class TraceUsedTime(object):
             enter_msg = 'Enter func:{0},time:{1}, msg:{2}'.format(function.__name__, datetime_in.now(), self._enter_msg)
             if self._b_print_stdout:
                 print(enter_msg)
-            my_logger.info(enter_msg)
+            logger.info(enter_msg)
 
             function(*args, **kwargs)
 
@@ -220,7 +220,7 @@ class TraceUsedTime(object):
             used_time = then - now
             exit_msg = 'Exit func:{0}, time:{1}, used_time:{2}, msg:{3}'.format(
                 function.__name__, datetime_in.now(), used_time, self._leave_msg)
-            my_logger.info(exit_msg)
+            logger.info(exit_msg)
             if self._b_print_stdout:
                 print(exit_msg)
         return _wrapper_log
