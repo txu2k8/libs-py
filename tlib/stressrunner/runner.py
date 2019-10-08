@@ -238,6 +238,8 @@ class OutputRedirector(object):
 
 stdout_redirector = OutputRedirector(sys.stdout)
 stderr_redirector = OutputRedirector(sys.stderr)
+STDOUT_LINE = '\nStdout:\n%s'
+STDERR_LINE = '\nStderr:\n%s'
 
 
 class _TestResult(unittest.TestResult):
@@ -276,6 +278,11 @@ class _TestResult(unittest.TestResult):
         self.dots = verbosity <= 1
         self.stdout0 = None
         self.stderr0 = None
+
+        self._stdout_buffer = None
+        self._stderr_buffer = None
+        self._original_stdout = sys.stdout
+        self._original_stderr = sys.stderr
         self.success_count = 0
         self.failure_count = 0
         self.error_count = 0
@@ -305,14 +312,15 @@ class _TestResult(unittest.TestResult):
         return test.shortDescription() or str(test)
 
     def _setup_output(self):
-        # just one buffer for both stdout and stderr
-        self.outputBuffer = io.BytesIO()
-        self.outputBuffer.truncate(0)
-        stdout_redirector.fp = self.outputBuffer
-        stderr_redirector.fp = self.outputBuffer
-
-        self.stdout0 = sys.stdout
-        self.stderr0 = sys.stderr
+        if self._stderr_buffer is None:
+            self._stderr_buffer = io.BytesIO()
+            self._stdout_buffer = io.BytesIO()
+            self._stdout_buffer.seek(0)
+            self._stdout_buffer.truncate()
+            self._stderr_buffer.seek(0)
+            self._stderr_buffer.truncate()
+        stdout_redirector.fp = self._stdout_buffer
+        stderr_redirector.fp = self._stderr_buffer
         sys.stdout = stdout_redirector
         sys.stderr = stderr_redirector
 
@@ -323,17 +331,30 @@ class _TestResult(unittest.TestResult):
         """
         # remove the running record
         self.result.pop(-1)
-        if self.stdout0:
-            sys.stdout = self.stdout0
-            sys.stderr = self.stderr0
-            self.stdout0 = None
-            self.stderr0 = None
+
+        output = sys.stdout.fp.getvalue().decode('UTF-8')
+        error = sys.stderr.fp.getvalue().decode('UTF-8')
+        output_info = ''
+        if output:
+            if not output.endswith('\n'):
+                output += '\n'
+            output_info += output
+            # self._original_stdout.write(STDOUT_LINE % output)
+        if error:
+            if not error.endswith('\n'):
+                error += '\n'
+            output_info += error
+            # self._original_stderr.write(STDERR_LINE % error)
+        sys.stdout = self._original_stdout
+        sys.stderr = self._original_stderr
+        self._stdout_buffer.seek(0)
+        self._stdout_buffer.truncate()
+        self._stderr_buffer.seek(0)
+        self._stderr_buffer.truncate()
 
         tc_stop_time = datetime.now()
         tc_elapsedtime = str(tc_stop_time - self.tc_start_time).split('.')[0]
         ts_elapsedtime = str(tc_stop_time - self.ts_start_time).split('.')[0]
-        output_info = self.outputBuffer.getvalue().decode('UTF-8')
-        self.outputBuffer.close()
         for test_item, err in (self.errors + self.failures):
             if test_item == test:
                 output_info += "{test_info}:".format(test_info=test)

@@ -19,7 +19,7 @@ CUR = os.getcwd()
 LOG_PATH = os.path.join(r'C:\Users\user\Documents', 'log')
 LOGFILE_PATH = os.path.join(LOG_PATH, 'run_test.log')
 REPORT_PATH = LOGFILE_PATH.replace('.log', '.html')
-logger = log.get_logger(logfile=LOGFILE_PATH, logger_name='test', debug=True, reset_logger=True)
+logger = log.get_logger(logfile=LOGFILE_PATH, logger_name='test', debug=False, reset_logger=True)
 
 
 def parse_arg():
