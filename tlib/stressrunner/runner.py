@@ -650,7 +650,7 @@ class StressRunner(object):
                 err_failure = res[3].strip('\n')
                 if err_failure:
                     self.logger.error(err_failure)
-            else:
+            if not _result.result:
                 for _test in test._tests:
                     self.logger.info(_test)
 
