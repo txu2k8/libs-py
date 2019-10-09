@@ -1,19 +1,20 @@
-## Over View [![](https://img.shields.io/badge/project-TLIB-yellow.svg)]() [![](https://img.shields.io/badge/Python-2.7-green.svg)]() [![](https://img.shields.io/badge/Python-3.6-green.svg)]() [![](https://img.shields.io/badge/Email-tao.xu2008@outlook.com-red.svg)]() [![](https://img.shields.io/badge/Blog-https://txu2008.github.io-red.svg)]()
+## **Over View** [![](https://img.shields.io/badge/project-TLIB-yellow.svg)]() [![](https://img.shields.io/badge/Python-2.7-green.svg)]() [![](https://img.shields.io/badge/Python-3.6-green.svg)]() [![](https://img.shields.io/badge/Email-tao.xu2008@outlook.com-red.svg)]() [![](https://img.shields.io/badge/Blog-https://txu2008.github.io-red.svg)]()
 GitHub **https://github.com/txu2008/TLIB**
 
 ## Catalogue
 
-01. [Stress Runner](https://github.com/txu2008/TLIB/tree/master/tlib/stressrunner)
-02. [log](https://github.com/txu2008/TLIB/blob/master/tlib/log)
-03. [mail](https://github.com/txu2008/TLIB/blob/master/tlib/mail)
-04. [bs](https://github.com/txu2008/TLIB/blob/master/tlib/bs)
+01. [Stress Runner] A TestRunner generates a HTML report to show the result at a glance. (https://github.com/txu2008/TLIB/tree/master/tlib/stressrunner)
+02. [log] logging config, colored, compress, log file/console (https://github.com/txu2008/TLIB/blob/master/tlib/log)
+03. [mail] Send email, attachment (https://github.com/txu2008/TLIB/blob/master/tlib/mail)
+04. [bs] Math calculate releated functions. (https://github.com/txu2008/TLIB/blob/master/tlib/bs)
 
 TODO
 
 ## Quick Start
 
 ### 1. Support
-    - 3.x
+    - 2.7+
+    - 3.6+
 
 ### 2. Installation
 

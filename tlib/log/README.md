@@ -1,6 +1,6 @@
 ## **LOG**
 
-logging config.
+logging config, colored, compress, log file/console .etc
 
 [![](https://img.shields.io/badge/project-log-yellow.svg)]()
 [![](https://img.shields.io/badge/Python-2.7-green.svg)]()

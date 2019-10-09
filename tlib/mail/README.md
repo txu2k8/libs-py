@@ -1,6 +1,6 @@
 ## **MAIL**
 
-Send email
+Send email, attachment.
 
 [![](https://img.shields.io/badge/project-mail-yellow.svg)]()
 [![](https://img.shields.io/badge/Python-2.7-green.svg)]()
