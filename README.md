@@ -10,9 +10,10 @@ GitHub **https://github.com/txu2008/TLIB**
 ## Catalogue
 
 01. [Stress Runner](https://github.com/txu2008/TLIB/tree/master/tlib/stressrunner) A TestRunner generates a HTML report to show the result at a glance.
-02. [log](https://github.com/txu2008/TLIB/blob/master/tlib/log) logging config, colored, compress, log file/console
-03. [mail](https://github.com/txu2008/TLIB/blob/master/tlib/mail) Send email, attachment
+02. [log](https://github.com/txu2008/TLIB/blob/master/tlib/log) logging config, colored, compress, log file/console.
+03. [mail](https://github.com/txu2008/TLIB/blob/master/tlib/mail) Send email, attachment.
 04. [bs](https://github.com/txu2008/TLIB/blob/master/tlib/bs) Math calculate releated functions.
+05. [data structure](https://github.com/txu2008/TLIB/blob/master/tlib/data_structure) Data Structures operations.
 
 TODO
 
