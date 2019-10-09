@@ -1,13 +1,11 @@
 ## **BS**
-
-Math calculate releated functions.
-
-[![](https://img.shields.io/badge/project-BS-yellow.svg)]()
+[![](https://img.shields.io/badge/Project-BS-yellow.svg)]()
 [![](https://img.shields.io/badge/Python-2.7-green.svg)]()
 [![](https://img.shields.io/badge/Python-3.6-green.svg)]()
 [![](https://img.shields.io/badge/Email-tao.xu2008@outlook.com-red.svg)]()
 [![](https://img.shields.io/badge/Blog-https://txu2008.github.io-red.svg)][1]
 
+Math calculate releated functions.
 
 #### Install
     pip install tlib

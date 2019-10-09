@@ -1,13 +1,11 @@
 ## **MAIL**
-
-Send email, attachment.
-
-[![](https://img.shields.io/badge/project-mail-yellow.svg)]()
+[![](https://img.shields.io/badge/Project-mail-yellow.svg)]()
 [![](https://img.shields.io/badge/Python-2.7-green.svg)]()
 [![](https://img.shields.io/badge/Python-3.6-green.svg)]()
 [![](https://img.shields.io/badge/Email-tao.xu2008@outlook.com-red.svg)]()
 [![](https://img.shields.io/badge/Blog-https://txu2008.github.io-red.svg)][1]
 
+Send email, attachment.
 
 #### Install
     pip install tlib
