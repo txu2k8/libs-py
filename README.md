@@ -4,25 +4,27 @@
 [![](https://img.shields.io/badge/Python-3.6-green.svg)]() 
 [![](https://img.shields.io/badge/Email-tao.xu2008@outlook.com-red.svg)]() 
 [![](https://img.shields.io/badge/Blog-https://txu2008.github.io-red.svg)]()
+Some own/observed great lib/ideas,common useful python libs/utils.
 
 GitHub **https://github.com/txu2008/tlib**
+
 PyPI: **https://pypi.org/project/tlib**
 
-## Catalogue
-0. [vim-config](https://github.com/txu2008/tlib/tree/master/tlib/vim-config) A easy vim configuration for python
-0. [Stress Runner](https://github.com/txu2008/TLIB/tree/master/tlib/stressrunner) A TestRunner generates a HTML report to show the result at a glance.
-0. [log](https://github.com/txu2008/TLIB/blob/master/tlib/log) logging config, colored, compress, log file/console.
-0. [mail](https://github.com/txu2008/TLIB/blob/master/tlib/mail) Send email, attachment.
-0. [bs](https://github.com/txu2008/TLIB/blob/master/tlib/bs) Math calculate releated functions.
-0. [data structure](https://github.com/txu2008/TLIB/blob/master/tlib/data_structure) Data Structures operations.
-0. [validparam](https://github.com/txu2008/tlib/tree/master/tlib/validparam) Decorators for verify param valid, verify param type, value range, ...
-0. [platform](https://github.com/txu2008/tlib/tree/master/tlib/platform) Linux/windows platform operations,such as shell,cmd,ssh...
-0. [retry](https://github.com/txu2008/tlib/tree/master/tlib/retry) Decorators for retry func
-0. [jenkinslib](https://github.com/txu2008/tlib/tree/master/tlib/jenkinslib) libs for jenkins
-0. [fileop](https://github.com/txu2008/tlib/tree/master/tlib/fileop) File operation related functions
-0. [utils](https://github.com/txu2008/tlib/tree/master/tlib/utils) Some python utils
 
-TODO
+## Catalogue
+1. [vim-config](https://github.com/txu2008/tlib/tree/master/tlib/vim-config) A easy vim configuration for python
+2. [Stress Runner](https://github.com/txu2008/TLIB/tree/master/tlib/stressrunner) A TestRunner generates a HTML report to show the result at a glance.
+3. [log](https://github.com/txu2008/TLIB/blob/master/tlib/log) logging config, colored, compress, log file/console.
+4. [mail](https://github.com/txu2008/TLIB/blob/master/tlib/mail) Send email, attachment.
+5. [bs](https://github.com/txu2008/TLIB/blob/master/tlib/bs) Math calculate releated functions.
+6. [data structure](https://github.com/txu2008/TLIB/blob/master/tlib/data_structure) Data Structures operations.
+7. [validparam](https://github.com/txu2008/tlib/tree/master/tlib/validparam) Decorators for verify param valid, verify param type, value range, ...
+8. [platform](https://github.com/txu2008/tlib/tree/master/tlib/platform) Linux/windows platform operations,such as shell,cmd,ssh...
+9. [retry](https://github.com/txu2008/tlib/tree/master/tlib/retry) Decorators for retry func
+10. [jenkinslib](https://github.com/txu2008/tlib/tree/master/tlib/jenkinslib) libs for jenkins
+11. [fileop](https://github.com/txu2008/tlib/tree/master/tlib/fileop) File operation related functions
+12. [utils](https://github.com/txu2008/tlib/tree/master/tlib/utils) Some python utils
+...
 
 ## Quick Start
 ### 1. Installation
