@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/TLIB.iml" filepath="$PROJECT_DIR$/.idea/TLIB.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tlib.iml" filepath="$PROJECT_DIR$/.idea/tlib.iml" />
     </modules>
   </component>
 </project>

@@ -63,7 +63,7 @@ setup(
     description='Some own/observed great lib/ideas,common useful python libs',
     long_description=_read_file('README.md'),
     long_description_content_type="text/markdown",
-    url='https://github.com/txu2008/TLIB',
+    url='https://github.com/txu2008/tlib',
     maintainer='tao.xu2008@outlook.com',
     author_email='tao.xu2008@outlook.com',
     keywords='library common baselib framework, stress runnner',

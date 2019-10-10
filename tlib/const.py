@@ -13,7 +13,26 @@
 import sys
 
 
-class _const(object):
+# =============================
+# --- golabl value set/get
+# =============================
+_global_dict = {}
+
+
+def set_value(key, value):
+    global _global_dict
+    _global_dict[key] = value
+
+
+def get_value(key, default_value=None):
+    try:
+        global _global_dict
+        return _global_dict[key]
+    except KeyError:
+        return default_value
+
+
+class _Const(object):
     """
     internal const class
     """
@@ -43,7 +62,7 @@ you can access tlib const like below:
 
 """
 
-_const_obj = _const()
+_const_obj = _Const()
 _const_obj.VERSION = '1.1.0'
 _const_obj.AUTHOR = 'tao.xu2008@outlook.com'
 
