@@ -5,7 +5,8 @@
 [![](https://img.shields.io/badge/Email-tao.xu2008@outlook.com-red.svg)]() 
 [![](https://img.shields.io/badge/Blog-https://txu2008.github.io-red.svg)]()
 
-GitHub **https://github.com/txu2008/TLIB**
+GitHub **https://github.com/txu2008/tlib**
+PyPI: **https://pypi.org/project/tlib**
 
 ## Catalogue
 
