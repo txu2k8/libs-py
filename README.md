@@ -9,22 +9,23 @@ GitHub **https://github.com/txu2008/tlib**
 PyPI: **https://pypi.org/project/tlib**
 
 ## Catalogue
+0. [vim-config](https://github.com/txu2008/tlib/tree/master/tlib/vim-config) A easy vim configuration for python
+0. [Stress Runner](https://github.com/txu2008/TLIB/tree/master/tlib/stressrunner) A TestRunner generates a HTML report to show the result at a glance.
+0. [log](https://github.com/txu2008/TLIB/blob/master/tlib/log) logging config, colored, compress, log file/console.
+0. [mail](https://github.com/txu2008/TLIB/blob/master/tlib/mail) Send email, attachment.
+0. [bs](https://github.com/txu2008/TLIB/blob/master/tlib/bs) Math calculate releated functions.
+0. [data structure](https://github.com/txu2008/TLIB/blob/master/tlib/data_structure) Data Structures operations.
+0. [validparam](https://github.com/txu2008/tlib/tree/master/tlib/validparam) Decorators for verify param valid, verify param type, value range, ...
+0. [platform](https://github.com/txu2008/tlib/tree/master/tlib/platform) Linux/windows platform operations,such as shell,cmd,ssh...
+0. [retry](https://github.com/txu2008/tlib/tree/master/tlib/retry) Decorators for retry func
+0. [jenkinslib](https://github.com/txu2008/tlib/tree/master/tlib/jenkinslib) libs for jenkins
+0. [fileop](https://github.com/txu2008/tlib/tree/master/tlib/fileop) File operation related functions
+0. [utils](https://github.com/txu2008/tlib/tree/master/tlib/utils) Some python utils
 
-01. [Stress Runner](https://github.com/txu2008/TLIB/tree/master/tlib/stressrunner) A TestRunner generates a HTML report to show the result at a glance.
-02. [log](https://github.com/txu2008/TLIB/blob/master/tlib/log) logging config, colored, compress, log file/console.
-03. [mail](https://github.com/txu2008/TLIB/blob/master/tlib/mail) Send email, attachment.
-04. [bs](https://github.com/txu2008/TLIB/blob/master/tlib/bs) Math calculate releated functions.
-05. [data structure](https://github.com/txu2008/TLIB/blob/master/tlib/data_structure) Data Structures operations.
-00. [vim-config] A easy vim config scripts
 TODO
 
 ## Quick Start
-
-### 1. Support
-    - 2.7+
-    - 3.6+
-
-### 2. Installation
+### 1. Installation
 
 Install from pip
 
@@ -39,9 +40,9 @@ Install from source code:
 python setup.py install
 ```
 
-### 3. Doc & Wiki
+### 2. Doc & Wiki
 
-Visit Wiki to see more details: https://github.com/txu2008/TLIB/wiki
+Visit Wiki to see more details: https://github.com/txu2008/tlib/wiki
 
 Visit Doc site to see py-docs: TODO
 
@@ -77,13 +78,13 @@ runner.run(test_suite)
 
 
 ## Tests
-    - run test/test_*.py
+    - Run test/test_*.py
     - python run_test.py log
     - python run_test.py mail
-    - etc.
+    - ...
 
 ## Contribute To TLIB
-    - Commit code to GITHUB, https://github.com/txu2008/TLIB
+    - Commit code to Github, https://github.com/txu2008/tlib
     - Need to check pep8 and pylint rules before you start a pull request
 
 ## Discussion
@@ -93,22 +94,27 @@ runner.run(test_suite)
       * http://tungwaiyip.info/software/HTMLTestRunner.html
 
 ## WIKI
-https://github.com/txu2008/TLIB/wiki
+https://github.com/txu2008/tlib/wiki
 
 ## code directory tree:
 
 ```text
-tlib
-    |-- stressrunner/*          module              super unittest framework, fit for stress test, report html, send email, etc.
+tlib/tlib
+    |-- stressrunner            module              A TestRunner generates a HTML report to show the result at a glance.
+    |-- log                     module              logging config, colored, compress, log file/console.    
+    |-- mail                    module              Send email, attachment.
+    |-- bs                      module              Math calculate releated functions.
+    |-- data_structure          module              Data Structures operations.
+    |-- validparam              module              Decorators for verify param valid, verify param type, value range, ...
+    |-- platform                module              Linux/windows platform operations,such as shell,cmd,ssh...
+    |-- retry                   module              Decorators for retry func
+    |-- jenkinslib              module              libs for jenkins
+    |-- fileop                  module              File operation related functions
+    |-- util                    package             common func utils, etc
+    |-- __init__.py             module              Default __init__.py
     |-- cache.py                module              Memory cache related module
     |-- decorators.py           module              Decorators of python
-    |-- err.py                  module              Exception classes for TLIB
-    |-- __init__.py             module              Default __init__.py
-    |-- log.py                  module              TLIB logging
-    |-- mail.py                 module              TLIB Email module (send emails)
-    |-- oper.py                 module              Mixin operations
-    |-- platforms.py            module              Cross-platform operations
-    |-- shell                   package             Shell Operations、cross-hosts execution
-    |-- util                    package             common func utils, etc
+    |-- err.py                  module              Exception classes for tlib
     |-- version.py              module              TLIB Version
+....
 ```

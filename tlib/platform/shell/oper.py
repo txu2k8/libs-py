@@ -105,14 +105,14 @@ def is_process_running(path, name):
         cmd = 'ps -ef|grep %s|grep -v "^grep "|grep -v "^vim "|grep -v "^less "|\
             grep -v "^vi "|grep -v "^cat "|grep -v "^more "|grep -v "^tail "|\
             awk \'{print $2}\'' % (name)
-        ret = tlib.shell.ShellExec().run(cmd, 10)
+        ret = tlib.platform.shell.ShellExec().run(cmd, 10)
         pids = ret['stdout'].strip().split('\n')
         if len(pids) == 0 or len(pids) == 1 and len(pids[0]) == 0:
             return False
         for pid in pids:
             for sel_path in ["cwd", "exe"]:
                 cmd = 'ls -l /proc/%s/%s|awk \'{print $11}\' ' % (pid, sel_path)
-                ret = tlib.shell.ShellExec().run(cmd, 10)
+                ret = tlib.platform.shell.ShellExec().run(cmd, 10)
                 pid_path = ret['stdout'].strip().strip()
                 if pid_path.find(path) == 0:
                     # print '%s is exist: %s' % (name, path)
@@ -127,7 +127,7 @@ is_proc_exist = is_process_running
 
 def _kill_child(pid, sign):
     cmd = 'ps -ef|grep %s|grep -v grep|awk \'{print $2,$3}\'' % (pid)
-    ret = tlib.shell.ShellExec().run(cmd, 10)
+    ret = tlib.platform.shell.ShellExec().run(cmd, 10)
     pids = ret['stdout'].strip().split('\n')
     for proc in pids:
         p_id = proc.split()
@@ -135,13 +135,13 @@ def _kill_child(pid, sign):
             _kill_child(p_id[0], sign)
         if p_id[0] == pid:
             if len(sign) == 0:
-                tlib.shell.execshell('kill %s' % pid)
+                tlib.platform.shell.execshell('kill %s' % pid)
             elif sign == '9' or sign == '-9':
-                tlib.shell.execshell('kill -9 %s' % pid)
+                tlib.platform.shell.execshell('kill -9 %s' % pid)
             elif sign == 'SIGSTOP' or sign == '19' or sign == '-19':
-                tlib.shell.execshell('kill -19 %s' % pid)
+                tlib.platform.shell.execshell('kill -19 %s' % pid)
             elif sign == 'SIGCONT' or sign == '18' or sign == '-18':
-                tlib.shell.execshell('kill -18 %s' % pid)
+                tlib.platform.shell.execshell('kill -18 %s' % pid)
             else:
                 tlib.log.error('sign error')
 
@@ -162,11 +162,11 @@ def kill(path, name, sign='', b_kill_child=False):
     path = os.path.realpath(os.path.abspath(path))
     # path = os.path.abspath(path)
     cmd = 'ps -ef|grep %s|grep -v grep|awk \'{print $2}\'' % (name)
-    ret = tlib.shell.ShellExec().run(cmd, 10)
+    ret = tlib.platform.shell.ShellExec().run(cmd, 10)
     pids = ret['stdout'].strip().split('\n')
     for pid in pids:
         cmd = 'ls -l /proc/%s/cwd|awk \'{print $11}\' ' % (pid)
-        ret = tlib.shell.ShellExec().run(cmd, 10)
+        ret = tlib.platform.shell.ShellExec().run(cmd, 10)
         if ret['returncode'] != 0:
             return False
         pid_path = ret['stdout'].strip()
@@ -174,13 +174,13 @@ def kill(path, name, sign='', b_kill_child=False):
             if b_kill_child is True:
                 _kill_child(pid, sign)
             if len(sign) == 0:
-                tlib.shell.execshell('kill %s' % pid)
+                tlib.platform.shell.execshell('kill %s' % pid)
             elif sign == '9' or sign == '-9':
-                tlib.shell.execshell('kill -9 %s' % pid)
+                tlib.platform.shell.execshell('kill -9 %s' % pid)
             elif sign == 'SIGSTOP' or sign == '19' or sign == '-19':
-                tlib.shell.execshell('kill -19 %s' % pid)
+                tlib.platform.shell.execshell('kill -19 %s' % pid)
             elif sign == 'SIGCONT' or sign == '18' or sign == '-18':
-                tlib.shell.execshell('kill -18 %s' % pid)
+                tlib.platform.shell.execshell('kill -18 %s' % pid)
             else:
                 tlib.log.error('sign error')
     return True
@@ -271,7 +271,7 @@ def is_port_used(port):
     def __is_port_used(port):
         """internal func"""
         cmd = "netstat -nl | grep ':%s '" % (port)
-        ret = tlib.shell.ShellExec().run(cmd, 10)
+        ret = tlib.platform.shell.ShellExec().run(cmd, 10)
         if 0 != ret['returncode']:
             return False
         stdout = ret['stdout'].strip()
@@ -294,7 +294,7 @@ def is_process_used_port(process_path, port):
     # find the pid from by port
     cmd = "netstat -nlp | grep ':%s '|awk -F ' ' '{print $7}'|\
         cut -d \"/\" -f1" % (port)
-    ret = tlib.shell.ShellExec().run(cmd, 10)
+    ret = tlib.platform.shell.ShellExec().run(cmd, 10)
     if 0 != ret['returncode']:
         return False
     stdout = ret['stdout'].strip()
@@ -305,7 +305,7 @@ def is_process_used_port(process_path, port):
     path = os.path.abspath(process_path)
     for sel_path in ['exe', 'cwd']:
         cmd = 'ls -l /proc/%s/%s|awk \'{print $11}\' ' % (dst_pid, sel_path)
-        ret = tlib.shell.ShellExec().run(cmd, 10)
+        ret = tlib.platform.shell.ShellExec().run(cmd, 10)
         pid_path = ret['stdout'].strip().strip()
         if 0 == pid_path.find(path):
             return True
@@ -804,14 +804,14 @@ def get_pid(process_path, grep_string):
         'ps -ef|grep \'%s\'|grep -v grep|grep -vwE "vim |less |vi |tail |cat |more "'
         '|awk \'{print $2}\''
     ) % (grep_string)
-    ret = tlib.shell.ShellExec().run(cmd, 10)
+    ret = tlib.platform.shell.ShellExec().run(cmd, 10)
     pids = ret['stdout'].strip().split('\n')
     if len(pids) == 0 or len(pids) == 1 and len(pids[0]) == 0:
         return None
     for pid in pids:
         for sel_path in ["cwd", "exe"]:
             cmd = 'ls -l /proc/%s/%s|awk \'{print $11}\' ' % (pid, sel_path)
-            ret = tlib.shell.ShellExec().run(cmd, 10)
+            ret = tlib.platform.shell.ShellExec().run(cmd, 10)
             pid_path = ret['stdout'].strip().strip()
             if pid_path.find(process_path) == 0:
                 return pid

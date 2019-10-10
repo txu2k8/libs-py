@@ -5,7 +5,7 @@
 [![](https://img.shields.io/badge/Email-tao.xu2008@outlook.com-red.svg)]()
 [![](https://img.shields.io/badge/Blog-https://txu2008.github.io-red.svg)][1]
 
-file related functions
+File operation related functions
 
 #### Install
     pip install tlib

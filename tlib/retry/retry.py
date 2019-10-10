@@ -45,7 +45,7 @@ from tlib import log
 logging_logger = log.get_logger()
 
 
-def __sleep_progressbar(sleep_time):
+def _sleep_progressbar(sleep_time):
     """
     Print a progress bar, total value: sleep_time(seconds)
     :param sleep_time:
@@ -60,8 +60,8 @@ def __sleep_progressbar(sleep_time):
     pbar.finish()
 
 
-def __retry_internal(f, exceptions=Exception, tries=-1, delay=0, max_delay=None, backoff=1, jitter=0,
-                     raise_exception=True, logger=logging_logger):
+def _retry_internal(f, exceptions=Exception, tries=-1, delay=0, max_delay=None, backoff=1, jitter=0,
+                    raise_exception=True, logger=logging_logger):
     """
     Executes a function and retries it if it failed.
     :param f: the function to execute.
@@ -108,7 +108,7 @@ def __retry_internal(f, exceptions=Exception, tries=-1, delay=0, max_delay=None,
                     return False
 
             # time.sleep(_delay)
-            __sleep_progressbar(_delay)
+            _sleep_progressbar(_delay)
             _delay *= backoff
 
             if isinstance(jitter, tuple):
@@ -139,8 +139,8 @@ def retry(exceptions=Exception, tries=-1, delay=0, max_delay=None, backoff=1, ji
     def retry_decorator(f, *fargs, **fkwargs):
         args = fargs if fargs else list()
         kwargs = fkwargs if fkwargs else dict()
-        return __retry_internal(partial(f, *args, **kwargs), exceptions, tries, delay, max_delay, backoff, jitter,
-                                raise_exception, logger)
+        return _retry_internal(partial(f, *args, **kwargs), exceptions, tries, delay, max_delay, backoff, jitter,
+                               raise_exception, logger)
 
     return retry_decorator
 
@@ -166,8 +166,8 @@ def retry_call(f, fargs=None, fkwargs=None, exceptions=Exception, tries=-1, dela
     """
     args = fargs if fargs else list()
     kwargs = fkwargs if fkwargs else dict()
-    return __retry_internal(partial(f, *args, **kwargs), exceptions, tries, delay, max_delay, backoff, jitter,
-                            raise_exception, logger)
+    return _retry_internal(partial(f, *args, **kwargs), exceptions, tries, delay, max_delay, backoff, jitter,
+                           raise_exception, logger)
 
 
 if __name__ == "__main__":

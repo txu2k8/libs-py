@@ -4,3 +4,6 @@
 # @Author  : Tao.Xu
 # @Email   : tao.xu2008@outlook.com
 
+from .cmd import *
+
+# __all__ = ['cmd']

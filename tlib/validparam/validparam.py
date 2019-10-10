@@ -9,7 +9,7 @@ r""" param verifier
 The module provides a decorator to verify whether the parameter is legal.
 Usage as follow:
 
-from lib_validparam import validParam, nullOk, multiType
+from validparam import validParam, nullOk, multiType
 
 @validParam(i=int)
 def foo(i):

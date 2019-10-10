@@ -11,20 +11,19 @@ Decorators for retry func
     pip install tlib
 
 #### Usage
-    from tlib import mail
+    from tlib.retry import retry, retry_call
     
+    @retry(tries=3, delay=10, jitter=1)
+    def test_1(a):
+        if not a:
+            raise Exception('raise for retry')
+            
+    def test_2(a):
+        if not a:
+            raise Exception('raise for retry')
+            
     if __name__ == "__main__":
-        # Solution 1: SmtpServer + Mail
-        obj_mail = mail.Mail(subject='', content='', m_from='', m_to='', m_cc='')
-        smtp_1 = mail.SmtpServer(host='localhost', user='', password='', port=25)
-        smtp_1.sendmail(obj_mail)
+        retry_call(test_2, fkwargs={'a':False}, tries=3, delay=10, jitter=1)
         
-        # Solution 2: SmtpMailer
-        smtp_2 = mail.SmtpMailer(sender='xy@gmail.com', server='smtp@gmail.com')
-        smtp_2.sendmail(xxxxx)
-        
-        # Solution 3: mutt sendmail, not recommended to use
-        mail.mutt_sendmail(m_to='xy@outlook.com', subject='test', body='test content', attach='', content_is_html=False)
-
 ***
 [1]: https://txu2008.github.io

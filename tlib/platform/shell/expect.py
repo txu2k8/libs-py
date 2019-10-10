@@ -143,7 +143,7 @@ def go_with_scp(
     cmd = ' sh %s ' % remote_file
     ret = go_ex(hostname, username, passwd, cmd, timeout, b_print_stdout)
     cmd = ' rm -f %s ' % host_file
-    res = tlib.shell.execshell(cmd, b_print_stdout)
+    res = tlib.platform.shell.execshell(cmd, b_print_stdout)
     if res:
         ret['result'] = 'rm -f host_file fail, ret:%s' % res
         return ret
