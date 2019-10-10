@@ -16,7 +16,7 @@ from tlib import err
 from tlib import mail
 from tlib.platform import shell
 from tlib.utils import util
-from tlib import platforms
+from tlib import platform
 from tlib import version
 
 if sys.version_info < (2, 6):
@@ -24,5 +24,7 @@ if sys.version_info < (2, 6):
 
 
 __all__ = [
-    'err', 'log', 'decorators', 'platforms', 'shell', 'version', 'test'
+    'bs', 'data_structure', 'fileop', 'retry', 'stressrunner', 'log',
+    'validparam', 'platform', 'mail', 'utils',
+    'err', 'decorators', 'version', 'test'
 ]

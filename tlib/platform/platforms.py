@@ -21,8 +21,8 @@ import paramiko
 
 
 from tlib import log
-from tlib.utils.bs import strsize_to_byte
-from tlib.utils.data_struct import escape
+from tlib.bs import strsize_to_byte
+from tlib.data_structure import escape
 from tlib.retry import retry, retry_call
 
 # =============================
