@@ -12,20 +12,8 @@ Decorators for retry func
 
 #### Usage
 ```python
-from tlib.retry import retry, retry_call
-
-@retry(tries=3, delay=10, jitter=1)
-def test_1(a):
-    if not a:
-        raise Exception('raise for retry')
-        
-def test_2(a):
-    if not a:
-        raise Exception('raise for retry')
-        
-if __name__ == "__main__":
-    retry_call(test_2, fkwargs={'a':False}, tries=3, delay=10, jitter=1)
+# TODO
 ```
-     
+
 ***
 [1]: https://txu2008.github.io

@@ -12,17 +12,26 @@ generates a HTML report to show the result at a glance.
     pip install tlib
 
 #### Usage
-    from tlib.stressrunner import StressRunner
-    from test.test_mail import TestMail
-    runner = StressRunner(
-            report_path='sr_test.log',
-            title='My unit test with stressrunner',
-            description='This demonstrates the report output by StressRunner.',
-            logger=logger, # support owner logging logger
-        )
-    test_suite = unittest.TestSuite()
-    test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMail))
-    runner.run(test_suite)
+```python
+import unittest
+
+from tlib import log
+from tlib.stressrunner import StressRunner
+from test.test_mail import TestMail
+
+logger = log.get_logger()
+
+runner = StressRunner(
+        report_path='sr_test.log',
+        title='My unit test with stressrunner',
+        description='This demonstrates the report output by StressRunner.',
+        logger=logger, # support owner logging logger
+    )
+test_suite = unittest.TestSuite()
+test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMail))
+runner.run(test_suite)
+```
+
 
 ***
 [1]: https://txu2008.github.io

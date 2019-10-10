@@ -11,10 +11,14 @@ libs for jenkins
     pip install tlib
 
 #### Usage
-    from tlib import jenkinslib
-    
-    if __name__ == "__main__":
-        # To Do
+```python
+from tlib import jenkinslib
+
+if __name__ == "__main__":
+    # TODO
+    pass
+```
+
         
 ***
 [1]: https://txu2008.github.io

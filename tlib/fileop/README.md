@@ -11,8 +11,9 @@ File operation related functions
     pip install tlib
 
 #### Usage
-    if __name__ == '__main__':
-
+```python
+# TODO
+```
 
 ***
 [1]: https://txu2008.github.io
