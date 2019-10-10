@@ -13,6 +13,7 @@ logging config, colored, compress, log file/console .etc
 #### Usage
 ```python
 from tlib import log
+
 if __name__ == "__main__":
     logfile = "test_2.log"
     logger = log.get_logger(logfile, logger_name='test2', debug=True)
