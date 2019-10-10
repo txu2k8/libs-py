@@ -18,7 +18,7 @@ from os.path import expanduser
 import threading
 
 from tlib import log
-from tlib.utils import util
+from tlib.retry import retry_call
 
 
 # =============================
@@ -27,25 +27,28 @@ from tlib.utils import util
 logger = log.get_logger()
 WINDOWS = os.name == "nt"
 
-if WINDOWS:
-    class SysWOW64Redirector():
-        """
-        Reference: http://code.activestate.com/recipes/578035-disable-file-system-redirector/
-        This class is needed while executing a 64 bit binary - 'C:\\Windows\\System32\\dfsutil.exe'.
-        Calling dfsutil (with or without absolute path) from from a 32-bit Python is a failure as
-        Windows OS tries to search it in 'C:\\Windows\\SysWOW64' where it is not present.
-        Note: For such binaries, this class will become redundant when 64 bit Python is used.
-        """
-        _disable = ctypes.windll.kernel32.Wow64DisableWow64FsRedirection
-        _revert = ctypes.windll.kernel32.Wow64RevertWow64FsRedirection
 
-        def __enter__(self):
-            self.old_value = ctypes.c_long()
-            self.success = self._disable(ctypes.byref(self.old_value))
+class SysWOW64Redirector(object):
+    """
+    if WINDOWS:
+    Reference: http://code.activestate.com/recipes/578035-disable-file-system-redirector/
+    This class is needed while executing a 64 bit binary -
+    'C:\\Windows\\System32\\dfsutil.exe'. Calling dfsutil (with or without
+    absolute path) from from a 32-bit Python is a failure as Windows OS tries
+    to search it in 'C:\\Windows\\SysWOW64' where it is not present.
+    Note: For such binaries, this class will become redundant when 64 bit
+    Python is used.
+    """
+    _disable = ctypes.windll.kernel32.Wow64DisableWow64FsRedirection
+    _revert = ctypes.windll.kernel32.Wow64RevertWow64FsRedirection
 
-        def __exit__(self, type, value, traceback):
-            if self.success:
-                self._revert(self.old_value)
+    def __enter__(self):
+        self.old_value = ctypes.c_long()
+        self.success = self._disable(ctypes.byref(self.old_value))
+
+    def __exit__(self, type, value, traceback):
+        if self.success:
+            self._revert(self.old_value)
 
 
 class Cmd(object):
@@ -53,40 +56,36 @@ class Cmd(object):
     This Class provides generic Command interface, i.e. executes a command
     """
 
-    def run(self, cmd_spec, output=True, retry_max=0, interval=10):
+    @staticmethod
+    def popen_run(cmd_spec, output=True):
         """
         Executes command and Returns (rc, output) tuple
         :param cmd_spec: Command to be executed
-        :param output: A flag for collecting STDOUT and STDERR of command execution
-        :param retry_max: max retry times
-        :param interval:
+        :param output: collecting STDOUT and STDERR or not?
         :return:
         """
 
-        for x in range(0, retry_max+1):
-            print('--------------------------------------')
-            print(cmd_spec)
-            #logger.info('Execute: {cmds}'.format(cmds=' '.join(cmd_spec)))
-            try:
-                p = subprocess.Popen(cmd_spec, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                if output:
-                    (stdout, stderr) = p.communicate()
-                    (rtn_code, std_out_err) = (p.returncode, stdout.decode('gbk')) if p.returncode == 0 else \
-                        (p.returncode, stderr.decode('UTF-8'))
-                else:
-                    (rtn_code, std_out_err) = (p.returncode, '')
-                # logger.debug('Output: {rtn}'.format(rtn=(rtn_code, std_out_err)))
-                logger.info('Output: returncode {r_code}, stdout/stderr:\n{r_out}'.format(r_code=rtn_code,
-                                                                                             r_out=std_out_err))
-                return rtn_code, std_out_err
+        logger.info('Execute: {cmds}'.format(cmds=' '.join(cmd_spec)))
+        try:
+            p = subprocess.Popen(cmd_spec, stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE, shell=True)
+            if output:
+                (stdout, stderr) = p.communicate()
+                rc = p.returncode
+                std_out = stdout.decode('UTF-8')
+                std_err = stderr.decode('UTF-8')
+                std_output = std_out + std_err
+            else:
+                (rc, std_out_err) = (p.returncode, '')
+            logger.info('Output:rc={0},stdout/stderr:\n{1}'.format(rc, std_output))
 
-            except Exception as e:
-                logger.warning('(retry:%d/%d)Failed to run command "%s"\n%s' % (x, retry_max, cmd_spec, e))
-                util.sleep_progressbar(interval)
-        else:
-            raise Exception('Failed to run command "{cmds}"'.format(cmds=cmd_spec))
+            return rc, std_output
 
-    def run_check_output(self, cmd_spec):
+        except Exception as e:
+            raise Exception(e)
+
+    @staticmethod
+    def check_output_run(cmd_spec):
         """
         run cmds with subprocess.check_output()
         :param cmd_spec:
@@ -94,42 +93,57 @@ class Cmd(object):
         """
 
         logger.debug('Subprocess.check_output: {cmd}'.format(cmd=cmd_spec))
-        rtn_dict = {'stdout': '', 'stderr': '', 'returncode': 0}
+        rc, std_out, std_err = 0, '', ''
+
         try:
             result = subprocess.check_output(cmd_spec, stderr=subprocess.STDOUT, shell=True)
-            rtn_dict['stdout'] = result.decode('UTF-8')
+            std_out = result.decode('UTF-8')
         except subprocess.CalledProcessError as error:
-            rtn_dict['stderr'] = error.output.decode('UTF-8')
-            rtn_dict['returncode'] = error.returncode
+            std_err = error.output.decode('UTF-8')
+            rc = error.returncode
         except Exception as e:
             logger.error('Exception occurred: {err}'.format(err=e))
-            rtn_dict['returncode'] = -1
+            rc = -1
 
-        return rtn_dict
+        return rc, std_out, std_err
 
-    def cmd_runner(self, cmd_spec, expected_rc=0, output=True, retry_max=1, interval=10):
+    def run(self, cmd_spec, expected_rc=0, output=True, tries=1, delay=10):
         """
-        A generic method for running commands which will raise exception if return code of exeuction is not as expected.
-        :param cmd_spec: A list of words constituting a command line
-        :param expected_rc:An expected value of return code after command execution, defaults to 0, If expected
-        RC.upper() is 'IGNORE' then exception will not be raised.
+        A generic method for running commands which will raise exception
+        if return code of exeuction is not as expected.
+        :param cmd_spec:A list of words constituting a command line
+        :param expected_rc:An expected value of return code after command
+        execution, defaults to 0, If expected RC.upper() is 'IGNORE' then
+        exception will not be raised.
+        :param output:collecting STDOUT and STDERR or not?
+        :param tries:
+        :param delay:
         :return:
         """
 
-        method_name = inspect.stack()[1][3]    # Get name of the calling method, returns <methodName>'
-        rc, output = self.run(cmd_spec, output, retry_max, interval)
+        # Get name of the calling method, returns <methodName>'
+        method_name = inspect.stack()[1][3]
+        rc, output = retry_call(self.popen_run,
+                                fkwargs={
+                                    'cmd_spec': cmd_spec,
+                                    'output': output
+                                }, tries=tries, delay=delay)
 
         if isinstance(expected_rc, str) and expected_rc.upper() == 'IGNORE':
             return rc, output
 
         if rc != expected_rc:
-            raise Exception('%s(): Failed command: %s\nMismatched RC: Received [%d], Expected [%d]\nError: %s' % (
+            raise Exception('%s(): Failed command: %s\nMismatched '
+                            'RC: Received [%d], Expected [%d]\nError: %s' % (
                 method_name, ' ' . join(cmd_spec), rc, expected_rc, output))
         return rc, output
 
 
 class DosCmd(Cmd):
-    """ This class represents Dos Prompt and provides interface to variety of DOS commands """
+    """
+    This class represents Dos Prompt and provides interface to variety of
+    DOS commands
+    """
 
     def __init__(self):
         super(DosCmd, self).__init__()
