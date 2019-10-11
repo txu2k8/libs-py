@@ -82,9 +82,12 @@ runner.run(test_suite)
 
 
 ## Tests
+How to run test case in this project:
     - Run test/test_*.py
     - python run_test.py log
     - python run_test.py mail
+    - python run_test.py es stress -h
+    - python run_test.py es index -h
     - ...
 
 ## Contribute To TLIB
