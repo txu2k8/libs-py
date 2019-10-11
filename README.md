@@ -25,6 +25,7 @@ PyPI: **https://pypi.org/project/tlib**
 10. [**jenkinslib**](https://github.com/txu2008/tlib/tree/master/tlib/jenkinslib) libs for jenkins
 11. [**fileop**](https://github.com/txu2008/tlib/tree/master/tlib/fileop) File operation related functions
 12. [**utils**](https://github.com/txu2008/tlib/tree/master/tlib/utils) Some python utils
+13. [**es**](https://github.com/txu2008/tlib/tree/master/tlib/es) ElasticSearch related test
 ...
 
 ## Quick Start
@@ -114,6 +115,7 @@ tlib/tlib
     |-- jenkinslib              module              libs for jenkins
     |-- fileop                  module              File operation related functions
     |-- util                    package             common func utils, etc
+    |-- es                      package             ElasticSearch related test
     |-- __init__.py             module              Default __init__.py
     |-- cache.py                module              Memory cache related module
     |-- decorators.py           module              Decorators of python
