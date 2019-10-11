@@ -97,8 +97,13 @@ def set_subparsers_suite(sub_parser):
     :param sub_parser:
     :return:
     """
+
+    from tlib.es.argument import tc_es_parsers
+
     tc_log_parsers(sub_parser)
     tc_mail_parsers(sub_parser)
+
+    tc_es_parsers(sub_parser)
 
 
 if __name__ == "__main__":

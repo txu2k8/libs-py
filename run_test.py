@@ -56,7 +56,7 @@ def parse_arg():
     return parser.parse_args()
 
 
-def main_1():
+def main():
     """Main method
     """
     args = parse_arg()
@@ -89,7 +89,7 @@ def main_1():
     return True
 
 
-def main_2():
+def main_1():
     from test.test_log import TestLog
     from test.test_mail import TestMail
 
@@ -110,4 +110,4 @@ def main_2():
 
 
 if __name__ == '__main__':
-    main_1()
+    main()

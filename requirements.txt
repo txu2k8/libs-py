@@ -1,3 +1,5 @@
+superelasticsearch
+elasticsearch
 asn1crypto==0.24.0
 bcrypt==3.1.7
 bleach==3.1.0
