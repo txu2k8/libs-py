@@ -1143,12 +1143,11 @@ class StressRunner(TemplateMix):
             # tar logs
             if (result.failure_count + result.error_count) > 0 and self.user_args.suite not in \
                     ['deploy', 'upgradecore', 'tools']:
-                from src.vizion.commons.vcc_obj import VCCObj
 
                 cass_ips = self.user_args.cass_ips
                 vset_ids = self.user_args.vset_ids
                 if util.is_ping_ok(cass_ips[0], retry=1):
-                    node_ips = VCCObj(cass_ips, vset_ids=vset_ids).vset_node_ips
+                    node_ips = []
                     tar_log_path = '/var/log/'
                     tar_log_backup_path = '/var/log/backup'
                     if vset_ids:

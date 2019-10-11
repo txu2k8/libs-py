@@ -247,7 +247,7 @@ class DosCmd(Cmd):
         """
         Removes ACL from the file/dir represented by path
         :param path:File/Dir path from which to remove ACL
-        :param user_name:User Name e.g. DEMOSP\\user1
+        :param user_name:User Name e.g. domain\\user1
         :param mode:Mode in which perm is set. Value can be 'd' for DENY,
         'g' GRANT or None to remove all ACLs of user_name
         :return:
@@ -1153,8 +1153,8 @@ class DosCmd(Cmd):
         """
         # Returns True, if 'ENABLED' string is found in output
         # Sample outputs indicating ENABLED and DISABLED state
-        #     Namespace \\demosp.com\cc1-1379\smoke: InSite Referrals ENABLED
-        #     Namespace \\demosp.com\cc1-1379\smoke: InSite Referrals DISABLED
+        #     Namespace \\domain.com\cc1-1379\smoke: InSite Referrals ENABLED
+        #     Namespace \\domain.com\cc1-1379\smoke: InSite Referrals DISABLED
         """
         cmd = ['dfsutil', 'Property', 'Insite', '\\\\%s\%s\%s' % (adFQDN, DFSRootName, shareName)]
         rc, output = self.CmdRunner(cmd)
@@ -1164,7 +1164,7 @@ class DosCmd(Cmd):
         blankLineRegx = re.compile('^$')
         expectedEntry = 'Namespace \\\\' + '\\'.join([adFQDN, DFSRootName, shareName])
         expectedEntry2 = expectedEntry.replace('\\', '\\\\')  # Escape backslashes for use in regular expression
-        # To match: Namespace \\demosp.com\cc1-1379\smoke: InSite Referrals ENABLED
+        # To match: Namespace \\domain.com\cc1-1379\smoke: InSite Referrals ENABLED
         # and capture last word - ENABLED or DISABLED
         insiteRegx = re.compile (r'^%s:\s+Insite\s+Referrals\s+(.+)$' % expectedEntry2, re.I)
 
@@ -1308,7 +1308,7 @@ class DosCmd(Cmd):
         # Also, flush other caches
         # Error code 1326 has been added in the list of success codes as its source
         # can be AD configuration with other/trusted domains and observed only while
-        # executing 'dfsutil /spcflush' and 'dfsutil /spcflush' when run against demosp.com
+        # executing 'dfsutil /spcflush' and 'dfsutil /spcflush' when run against domain.com
         # e.g.
         # C:\temp>dfsutil /spcflush
         # Could not execute the command successfully
@@ -1319,7 +1319,7 @@ class DosCmd(Cmd):
         # More notes:
         # http://www.error.info/windows/permission-1326.html indicates that configuration of
         # local security policies as a source of this error which as saide has occured while
-        # working with demosp.com and revise it when run on a new setup.
+        # working with domain.com and revise it when run on a new setup.
         #
 
         _cacheTypes = ['Provider', 'Referral', 'Domain']

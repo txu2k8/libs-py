@@ -29,7 +29,7 @@ def parse_arg():
     """
 
     # Parent parser
-    parser = argparse.ArgumentParser(description='Panzura Vizion Test Project')
+    parser = argparse.ArgumentParser(description='tlib Test Project')
     parser.add_argument("--debug", action="store_true", dest="debug", default=False,
                         help="debug mode,will not send email")
     parser.add_argument("--run_time", action="store", dest="run_time", default=60*60*24*3, type=int,

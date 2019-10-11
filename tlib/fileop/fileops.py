@@ -139,7 +139,7 @@ class FileOps(object):
             os.makedirs(dir_full_path)
             # save the dirpath without the drive label
             # tmp_path =   dir_full_path[3:]
-            tmp_path = os.path.join(dir, name)  # changed by tao.xu, txu@panzura.com
+            tmp_path = os.path.join(dir, name)  # changed by tao.xu
             self.SubDirs.append(tmp_path)
 
     def rename_dir(self, drive):

@@ -23,8 +23,8 @@ class TestMail(unittest.TestCase):
         logger.info("Mail test Start ...")
         self.subject = 'Mail Test subject'
         self.content = 'Mail Test content'
-        self.address_from = 'txu@panzura.com'
-        self.address_to = 'txu@panzura.com'
+        self.address_from = 'tao.xu2008@outlook.com'
+        self.address_to = 'tao.xu2008@outlook.com'
         self.attachments = []  # ['./log/debug.log']
 
         self.host = "smtp.gmail.com"

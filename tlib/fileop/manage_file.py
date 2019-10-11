@@ -1640,8 +1640,8 @@ class ACL(Base):
 
     def _parseUserName(self, userName):
         """
-        Parse user names such as demosp.com\\user1 or demosp.panzura.com\\user1 and
-        construct user name as DEMOSP\\user1 (this is how the username appears in ACL list)
+        Parse user names such as domain.com\\user1 or domain.inc.com\\user1 and
+        construct user name as domain\\user1 (this is how the username appears in ACL list)
         For a user name like CREATOR OWNER which do not have a domain; userName as is will be returned
         :param userName:
         """
@@ -1651,7 +1651,7 @@ class ACL(Base):
         if len(userNameSplits) == 1:
             parsedUserName = userName  # When userName is 'CREATOR OWNER'
         else:
-            domainNameSplits = re.split(r'\.', userNameSplits[0])  # split 'demosp.panzura.com' to get 'demosp' only
+            domainNameSplits = re.split(r'\.', userNameSplits[0])  # split 'domain.inc.com' to get 'domain' only
             domainName = domainNameSplits[0].upper()
             parsedUserName = domainName + '\\' + userNameSplits[1]
         logger.info('Username [%s] after parsing: %s' % (userName, parsedUserName))
