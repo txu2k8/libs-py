@@ -133,9 +133,10 @@ class Cmd(object):
             return rc, output
 
         if rc != expected_rc:
-            raise Exception('%s(): Failed command: %s\nMismatched '
-                            'RC: Received [%d], Expected [%d]\nError: %s' % (
-                method_name, ' ' . join(cmd_spec), rc, expected_rc, output))
+            raise Exception('%s(): Failed command: %s\n'
+                            'Mismatched RC: Received [%d], Expected [%d]\n'
+                            'Error: %s' % (method_name, ' '. join(cmd_spec),
+                                           rc, expected_rc, output))
         return rc, output
 
 
@@ -151,10 +152,15 @@ class DosCmd(Cmd):
 
     @property
     def _volrest(self):
-        # Installing w2k3 resource kit will be a part of client setup
-        # This kit provides 'volreset.exe' to do 'Previous Version' operations
-        # Windows Resource Kits tools download from https://www.microsoft.com/en-us/download/details.aspx?id=17657
-        # _win2k3ResourceKit = r'c:\Program Files (x86)\Windows Resource Kits\Tools'
+        """
+        Installing w2k3 resource kit will be a part of client setup
+        This kit provides 'volreset.exe' to do 'Previous Version' operations
+        Windows Resource Kits tools download from
+        https://www.microsoft.com/en-us/download/details.aspx?id=17657
+        _win2k3ResourceKit = r'c:\Program Files (x86)\Windows Resource Kits\Tools'
+        :return:
+        """
+
         cur_dir = os.getcwd()
         _win2k3ResourceKit = os.path.join(cur_dir, 'tools', 'WindowsResourceKitsTools')
         return os.path.join(_win2k3ResourceKit, 'volrest.exe')
@@ -162,7 +168,11 @@ class DosCmd(Cmd):
 
     @property
     def _wmic(self):
-        # Using absolute path for 'wmic' to fix "'wmic' is not recognized as an internal or external command" error
+        """
+        Using absolute path for 'wmic' to fix "'wmic' is not recognized as an
+        internal or external command" error
+        :return:
+        """
         return r'C:\Windows\System32\wbem\WMIC.exe'
 
     @property
@@ -182,11 +192,14 @@ class DosCmd(Cmd):
         """
 
         cmd = ['robocopy', '/e', '/r:5', src_path, dst_path]
-        rc, output = self.run(cmd)
-        # logger.debug('$ %s\n%s' % (cmd, output))
-        """ Any value greater than 8 indicates that there was at least one failure during the robocopy operation """
+        rc, output = self.run(cmd, expected_rc='ignore')
+        logger.info('rc={0}, output:{1}'.format(rc, output))
+        '''
+        Any value greater than 8 indicates that there was at least one 
+        failure during the robocopy operation
+        '''
         if rc > 8:
-            raise Exception('DosCmd: Command failed...\n$ %s\nError %d: %s' % (' '.join(cmd), rc, output))
+            raise Exception('DosCmd: Command failed!')
         return True
 
     def set_acl(self, path, user, perm, mode='grant:r'):
@@ -196,25 +209,25 @@ class DosCmd(Cmd):
         :param user:user for whom ACL will be set
         :param perm:Access rights
         :param mode:grant or deny
-        :return:Returns dos command output on Success. Raises exception if command fails
+        :return:Return dos command output if Success
         """
 
         cmd = ['icacls', path, '/%s' % mode, '%s:%s' % (user, perm)]
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
+        rc, output = self.run(cmd, expected_rc=0)
         return output
 
     def get_acl(self, path):
         """
         Get file ACL
         :param path:File/Dir path from which to get ACL
-        :return: Returns ACL Map .e.g. ['user1':['acl1', 'acl2', ...], 'user2':..]
+        :return: Returns ACL Map .e.g. ['user1':['acl1', 'acl2'], 'user2':..]
         """
 
         cmd = ['icacls', path]
-        (rc, output) = self.run(cmd)
+        (rc, output) = self.run(cmd, expected_rc=0)
         # logger.debug('$ %s\n%s' % (cmd, output))
         if rc != 0 or output is None or len(output) == 0:
-            raise Exception('DosCmd: Command failed...\n$ %s\nError %d: %s' % (' '.join(cmd), rc, output))
+            raise Exception('Failed! rc={0}, output:{1}'.format(rc, output))
 
         acl_map = {}
         for acl_desc in output.split()[1:]:
@@ -235,14 +248,15 @@ class DosCmd(Cmd):
         Removes ACL from the file/dir represented by path
         :param path:File/Dir path from which to remove ACL
         :param user_name:User Name e.g. DEMOSP\\user1
-        :param mode:Mode in which perm is set. Value can be 'd' for DENY, 'g' GRANT or None to remove all ACLs of user_name
+        :param mode:Mode in which perm is set. Value can be 'd' for DENY,
+        'g' GRANT or None to remove all ACLs of user_name
         :return:
         """
 
         mode = '' if mode is None else ':%s' % mode
         cmd = ['icacls', path, '/remove%s' % mode, user_name]
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # logger.debug('$ %s\n%s' % (cmd, output))
+        rc, output = self.run(cmd, expected_rc=0)
+        logger.debug(output)
         return output
 
     def change_inheritance(self, path, op_code='e'):
@@ -254,8 +268,8 @@ class DosCmd(Cmd):
         """
 
         cmd = ['icacls', path, '/inheritance:%s' % op_code]
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # logger.debug('$ %s\n%s' % (cmd, output))
+        rc, output = self.run(cmd, expected_rc=0)
+        logger.debug(output)
         return output
 
     def run_dos_attr(self, path, attr_spec, op):
@@ -277,8 +291,8 @@ class DosCmd(Cmd):
         for attr in attr_spec:
             cmd.append('%s%s' % (op, attr))
         cmd.append(path)
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
+        rc, output = self.run(cmd, expected_rc=0)
+        logger.debug(output)
         return output
 
     def set_dos_attr(self, path, attr_spec):
@@ -317,12 +331,13 @@ class DosCmd(Cmd):
         """
         Get attributes
         :param path: File path for which to return attribute
-        :return: Returns list of attributes associated with the path using 'attrib' command
+        :return: Returns list of attributes associated with the path
+        using 'attrib' command
         """
 
         cmd = ['attrib', path]
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
+        rc, output = self.run(cmd, expected_rc=0)
+        logger.debug(output)
 
         attr_spec = ''.join(output.split()[:-1])
         return attr_spec
@@ -336,8 +351,8 @@ class DosCmd(Cmd):
         """
 
         cmd = ['icacls', path, '/setowner', owner]
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # logger.debug('%s\n%s' % (' '.join(cmd), output))
+        rc, output = self.run(cmd, expected_rc=0)
+        logger.debug(output)
         return output
 
     def get_owner(self, path):
@@ -348,13 +363,14 @@ class DosCmd(Cmd):
         """
 
         cmd = ['dir', '/q', path]
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
-        # logger.debug('%s\n%s' % (' '.join(cmd), output))
+        rc, output = self.run(cmd, expected_rc=0)
+        logger.debug(output)
 
         owner = None
         dpath, fname = os.path.split(path)
-        # Matches: 04/24/2015  12:26 PM            12,589 BUILTIN\Administrators panbot.py
-        owner_pattern = re.compile (r'^\s*[/0-9]+\s+[:0-9]+\s+(?:A|P)M\s+[,0-9]+\s+(\S+)\s+%s\s*$' % re.escape(fname))
+        # Matches:
+        # 04/24/2015  12:26 PM            12,589 BUILTIN\Administrators a.py
+        owner_pattern = re.compile(r'^\s*[/0-9]+\s+[:0-9]+\s+(?:A|P)M\s+[,0-9]+\s+(\S+)\s+%s\s*$' % re.escape(fname))
 
         for line in output.split('\n'):
             m = owner_pattern.match(line)
@@ -365,36 +381,41 @@ class DosCmd(Cmd):
 
     def get_previous_versions(self, path, recursive=True):
         """
-        Uses volrest, to return a list of previous version associated with the path
+        Use volrest get a list of previous version associated with the path
 
-        Normally, for a file/folder without any backing snapshot, screen-shot of execution is as below:
-        VOLREST 1.1 - Previous Version command-line tool
-        (C) Copyright 2003 Microsoft Corp.
-        No previous versions.
-        C:\\Users\\test1>echo %errorlevel%
-        0
-        Observation is, in this scenario when volrest.exe fails to execute with success even if its run multiple times
-        in a loop.Screen-shot of execution with return code as 1 is as below:
-        (C) Copyright 2003 Microsoft Corp.
-        Failed to query shadow copies
-        More data is available.
-        C:\\Users\\test1>echo %errorlevel%
-        1
+        Normally, for a file/folder without any backing snapshot,
+        screen-shot of execution is as below:
+            VOLREST 1.1 - Previous Version command-line tool
+            (C) Copyright 2003 Microsoft Corp.
+            No previous versions.
+            C:\\Users\\test1>echo %errorlevel%
+            0
+        Observation is, in this scenario when volrest.exe fails to execute
+        with success even if its run multiple times in a loop.Screen-shot
+        of execution with return code as 1 is as below:
+            (C) Copyright 2003 Microsoft Corp.
+            Failed to query shadow copies
+            More data is available.
+            C:\\Users\\test1>echo %errorlevel%
+            1
         And hence, an alternate approach is:
-            if rc is not 0; check if output contains "Failed to query shadow copies" then
-                return [] (empty list) which means 'No previous versions available'
-        And this is essentially to fix failure of 2101_CC-449-3_wpvDeleteAllSnapsNoPV in wpv.txt
+            if rc is not 0; check if output contains
+            "Failed to query shadow copies" then return [] (empty list)
+            which means 'No previous versions available'
+        And this is essentially to fix failure of
+        2101_CC-449-3_wpvDeleteAllSnapsNoPV in wpv.txt
 
-        :param path: File or directory path for which to return a list of Previous Versions
+        :param path: Target File or directory path for get Previous Versions
         :param recursive: If True, includes '/S' parameter while listing PVs
-        :return previousVersions: A list of previous versions with each entry in a map of key-value pairs
+        :return previousVersions: A list of previous versions with each entry
+        in a map of key-value pairs
         """
 
         cmd = [DosCmd._volrest, '/S', path] if recursive else [DosCmd._volrest, path]
 
         previous_versions = []
         rc, output = self.run(cmd)
-        # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
+        logger.debug(output)
         if rc != 0:
             search_str = "Failed to query shadow copies"
             for line in output.split('\n'):
@@ -402,7 +423,7 @@ class DosCmd(Cmd):
                     logger.info(line)
                     return previous_versions
 
-            raise Exception('DosCmd: Command failed...\n$ %s\nError %d: %s' % (' '.join(cmd), rc, output))
+            raise Exception('DosCmd Failed!rc={0},output:{1}'.format(rc, output))
 
         # Matches: 12/15/2014  02:28 AM            11,342 P:\@GMT-2014.12.17-08.00.08\wtest1.docx
         #          12/23/2014  08:10 AM     <DIR>         p:\@GMT-2014.12.24-08.00.04\testdir2\sub-folder1
@@ -459,8 +480,8 @@ class DosCmd(Cmd):
             # Option E will include empty directories during restoration
             print(DosCmd()._volrest)
             cmd = [DosCmd()._volrest, '/E', '/S', destination, path]
-            rc, output = self.cmd_runner(cmd, expected_rc=0)
-            # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
+            rc, output = self.run(cmd, expected_rc=0)
+            logger.debug(output)
             return rc
         else:
             raise Exception('DosCmd: Could not copy PVs of [%s] in [%s] as it\'s not a dirpath' % (path, destination))
@@ -491,7 +512,7 @@ class DosCmd(Cmd):
         """
 
         cmd = ['taskkill', '/f', '/im', proc_name]
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
+        rc, output = self.run(cmd, expected_rc=0)
         # logger.info('$ %s\n%s' % (cmd, output))
         return rc
 
@@ -508,7 +529,7 @@ class DosCmd(Cmd):
         archive_type = '-t' + atype.lower()
         cmd = [archiver, 'a',  archive_type, archive, source]
 
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
+        rc, output = self.run(cmd, expected_rc=0)
         # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
         return rc
 
@@ -525,7 +546,7 @@ class DosCmd(Cmd):
         op_code_cmd_map = {'add': 'a', 'delete': 'd'}
         cmd = [archiver, op_code_cmd_map[op_code], archive, input]
 
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
+        rc, output = self.run(cmd, expected_rc=0)
         # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
         return rc
 
@@ -541,7 +562,7 @@ class DosCmd(Cmd):
         epath = '-o' + path
         cmd = [archiver, 'x', archive, epath]
 
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
+        rc, output = self.run(cmd, expected_rc=0)
         # logger.debug('$ %s\n%s' % (' '.join(cmd), output))
         return rc
 
@@ -589,7 +610,7 @@ class DosCmd(Cmd):
         """
 
         cmd = ['net', 'use']
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
+        rc, output = self.run(cmd, expected_rc=0)
         return rc, output
 
     def check_mapped_drive(self, drive):
@@ -601,7 +622,7 @@ class DosCmd(Cmd):
 
         logger.info("drive: %s" % drive)
         cmd = ['dir', drive]
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
+        rc, output = self.run(cmd, expected_rc=0)
         return rc, output
 
     def get_used_drives(self):
@@ -656,7 +677,7 @@ class DosCmd(Cmd):
         """
 
         cmd = ['net', 'use']
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
+        rc, output = self.run(cmd, expected_rc=0)
         mapped_drives = []
 
         # To match: -------------------------------------------------------------------------------
@@ -702,7 +723,7 @@ class DosCmd(Cmd):
         """
 
         cmd = ['net', 'use', '/delete', drive_name, '/y']
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
+        rc, output = self.run(cmd, expected_rc=0)
         return rc
 
     def get_domain(self):
@@ -718,7 +739,7 @@ class DosCmd(Cmd):
         """
 
         cmd = [DosCmd._wmic, 'computersystem', 'get', 'domain']
-        rc, output = self.cmd_runner(cmd, expected_rc=0)
+        rc, output = self.run(cmd, expected_rc=0)
         header_regx = re.compile('^Domain$')
         domain_regx = re.compile('^(\S+)$')
         blankLine_regx = re.compile('^$')

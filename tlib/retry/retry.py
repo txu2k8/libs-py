@@ -170,5 +170,12 @@ def retry_call(f, fargs=None, fkwargs=None, exceptions=Exception, tries=-1, dela
                            raise_exception, logger)
 
 
+@retry(tries=2, delay=1)
+def test(a):
+    if a < 3:
+        raise Exception('err')
+
+
 if __name__ == "__main__":
-    pass
+    # disable decorator by call the func.__wrapped__()
+    retry_call(test.__wrapped__, fkwargs={'a': 1}, tries=3, delay=2)
