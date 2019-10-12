@@ -45,7 +45,7 @@ def parse_arg():
     # Sub parser
     subparsers = parser.add_subparsers(help='project: unit test')
 
-    # ----------------- cc sub-commands -----------------
+    # ----------------- more sub-commands -----------------
     # test_parser = subparsers.add_parser('test', help='sub command of test')
     # test_parser.set_defaults(project='test')
     #
