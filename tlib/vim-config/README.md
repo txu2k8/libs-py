@@ -8,7 +8,7 @@ A easy vim configuration scripts for the modern python (plus some other goodies)
 lot of python, autocompletition, fuzzy finder, debugger, ...
 
 1. [**sh-vim-config**](https://github.com/txu2008/tlib/tree/master/tlib/vim-config/sh-vim-config) FYI: https://github.com/JeffXue/vim-config
-2. [**fisa-vim-config**](https://github.com/txu2008/tlib/tree/master/tlib/vim-config/fisa-vim-config) FYI: https://github.com/fisadev/fisa-vim-config (http://fisadev.github.io/fisa-vim-config/)
+2. [**fisa-vim-config**](https://github.com/txu2008/tlib/tree/master/tlib/vim-config/fisa-vim-config) FYI: https://github.com/fisadev/fisa-vim-config (recommend)
 
 #### Install
     1. sh-vim-config
