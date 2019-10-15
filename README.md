@@ -29,8 +29,6 @@ PyPI: **https://pypi.org/project/tlib**
 1. [**validparam**](https://github.com/txu2008/tlib/tree/master/tlib/validparam) Decorators for verify param valid, verify param type, value range, ...
 1. [**vim-config**](https://github.com/txu2008/tlib/tree/master/tlib/vim-config) A easy vim configuration for python
 
-...
-
 ## Quick Start
 ### 1. Installation
 
@@ -106,8 +104,7 @@ How to run test case in this project:
 ## WIKI
 https://github.com/txu2008/tlib/wiki
 
-## code directory tree:
-
+## Code directory tree:
 ```text
 tlib
     |-- docs                    module              Docments
