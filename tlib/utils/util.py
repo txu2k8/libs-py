@@ -43,41 +43,6 @@ def print_for_call(func):
     return _wrapped
 
 
-# parameters that apply to all methods
-GLOBAL_PARAMS = ("timeout",)
-
-
-def query_params(*func_query_params):
-    """
-    Decorator that pops all accepted parameters from method's kwargs and puts
-    them in the params argument.
-    :param func_query_params:
-    :return:
-    """
-
-    def _wrapper(func):
-        @wraps(func)
-        def _wrapped(*args, **kwargs):
-            params = {}
-            if "params" in kwargs:
-                params = kwargs.pop("params").copy()
-            for p in func_query_params + GLOBAL_PARAMS:
-                if p in kwargs:
-                    v = kwargs.pop(p)
-                    if v is not None:
-                        params[p] = escape(v)
-
-            # don't treat ignore and request_timeout as other params to avoid escaping
-            for p in ("ignore", "request_timeout"):
-                if p in kwargs:
-                    params[p] = kwargs.pop(p)
-            return func(*args, params=params, **kwargs)
-
-        return _wrapped
-
-    return _wrapper
-
-
 def sleep_progressbar(seconds):
     """
     Print a progress bar, total value: seconds

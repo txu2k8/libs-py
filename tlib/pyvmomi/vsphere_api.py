@@ -22,6 +22,8 @@ from threading import Thread
 import unittest
 import ssl
 import atexit
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from pyVim import connect  # pip install pyVmomi
 from pyVim.task import WaitForTask
 from pyVmomi import vim
@@ -138,6 +140,48 @@ class VsphereApi(object):
         finally:
             if pcfilter:
                 pcfilter.Destroy()
+
+    def get_obj(self, vimtype, name, show=False):
+        """
+        Return an object by name, if name is None the
+        first found object is returned
+        :param vimtype: such as [vim.Datacenter]
+        :param name:
+        :param show: print the obj
+        :return:
+        """
+        obj = None
+        container = self.content.viewManager.CreateContainerView(
+            self.content.rootFolder, vimtype, True)
+        for c in container.view:
+            if name:
+                if c.name == name:
+                    obj = c
+                    break
+            else:
+                obj = c
+                break
+
+        if show and obj:
+            print("obj.name:" + str(obj.name))
+
+        return obj
+
+    @staticmethod
+    def get_obj_in_list(obj_name, obj_list):
+        """
+        Return an object out of a list (obj_list) who's name matches obj_name.
+        """
+        for obj in obj_list:
+            if obj.name == obj_name:
+                return obj
+        raise Exception("Unable to find object by the name of %s in list:\n%s"
+                        % (obj_name, map(lambda obj: obj.name, obj_list)))
+
+    def rename_obj(self, obj, new_name):
+        print("renaming from %s to %s ..." % (obj.name, new_name))
+        task = obj.Rename(new_name)
+        self.wait_for_tasks([task])
 
     # ================== Get VM ==================
     @staticmethod
@@ -313,7 +357,29 @@ class VsphereApi(object):
     def get_vm_cpu(vm):
         return vm.config.hardware.numCPU
 
-    # ================== Power VM ==================
+    @staticmethod
+    def get_vm_disks(vm):
+        """
+        Internal method to collect template disks
+        :param vm: VM object
+        :return: list of vm disks
+        """
+        vm_disks = []
+        for device in vm.config.hardware.device:
+            if type(device).__name__ == "vim.vm.device.VirtualDisk":
+                datastore = device.backing.datastore
+                print("device.deviceInfo.summary:" + device.deviceInfo.summary)
+                print("datastore.summary.type:" + datastore.summary.type)
+                if hasattr(device.backing, 'fileName'):
+                    disk_desc = str(device.backing.fileName)
+                    print("Disc Discription -- {}".format(disk_desc))
+                    drive = disk_desc.split("]")[0].replace("[", "")
+                    print("drive:" + drive)
+                    print("device.backing.fileName:" + device.backing.fileName)
+                    vm_disks.append(device)
+        return vm_disks
+
+    # ================== Power OPS VM ==================
     @staticmethod
     def check_vm_power_state(vm, expected_state='poweredOn'):
         power_state = vm.runtime.powerState
@@ -467,7 +533,291 @@ class VsphereApi(object):
             raise Exception('Support power operate:{0}\n{1}'.format(
                 support_power_opt, e))
 
+    def multi_power_ops(self, vm_ops_dict):
+        """
+        multi power operate VMs, support power operate, choice in
+            [
+                'poweroff',
+                'shutdown',
+                'poweron',
+                'suspend',
+                'reset',
+                'reboot',
+                'standby'
+            ]
+        :param vm_ops_dict: {vm1:ops1, vms2:ops2} type:(vm: obj, ops:str)
+        :return:
+        """
+        pool = ThreadPoolExecutor(max_workers=8)
+        futures = []
+        for vm, ops in vm_ops_dict.items():
+            futures.append(pool.submit(self.power_ops, vm, ops))
+        pool.shutdown()
+        future_results = [future.result() for future in as_completed(futures)]
+
+        return all(future_results)
+
+    def multi_power_ip_ops_dict(self, ip_ops_dict):
+        """
+        multi power operate VMs, support power operate, choice in
+            [
+                'poweroff',
+                'shutdown',
+                'poweron',
+                'suspend',
+                'reset',
+                'reboot',
+                'standby'
+            ]
+        :param ip_ops_dict: {ip1:ops1, ip2:ops2}
+        :return:
+        """
+        pool = ThreadPoolExecutor(max_workers=8)
+        futures = []
+        for ip, ops in ip_ops_dict.items():
+            vm = self.get_vm_by_ip(ip)
+            futures.append(pool.submit(self.power_ops, vm, ops))
+        pool.shutdown()
+        future_results = [future.result() for future in as_completed(futures)]
+
+        return all(future_results)
+
+    def multi_power_name_ops_dict(self, name_ops_dict):
+        """
+        multi power operate VMs, support power operate, choice in
+            [
+                'poweroff',
+                'shutdown',
+                'poweron',
+                'suspend',
+                'reset',
+                'reboot',
+                'standby'
+            ]
+        :param name_ops_dict: {name1:ops1, name2:ops2}
+        :return:
+        """
+        pool = ThreadPoolExecutor(max_workers=8)
+        futures = []
+        for name, ops in name_ops_dict.items():
+            vm = self.get_vm_by_name(name)
+            futures.append(pool.submit(self.power_ops, vm, ops))
+        pool.shutdown()
+        future_results = [future.result() for future in as_completed(futures)]
+
+        return all(future_results)
+
+    def multi_power_ips_ops(self, ip_list, ops='poweron'):
+        """
+        multi power operate VMs, support power operate, choice in
+            [
+                'poweroff',
+                'shutdown',
+                'poweron',
+                'suspend',
+                'reset',
+                'reboot',
+                'standby'
+            ]
+        :param ip_list: vms ip list
+        :param ops: string of operate
+        :return:
+        """
+        pool = ThreadPoolExecutor(max_workers=8)
+        futures = []
+        for ip in ip_list:
+            vm = self.get_vm_by_ip(ip)
+            futures.append(pool.submit(self.power_ops, vm, ops))
+        pool.shutdown()
+        future_results = [future.result() for future in as_completed(futures)]
+
+        return all(future_results)
+
+    def multi_power_names_ops(self, name_list, ops='poweron'):
+        """
+        multi power operate VMs, support power operate, choice in
+            [
+                'poweroff',
+                'shutdown',
+                'poweron',
+                'suspend',
+                'reset',
+                'reboot',
+                'standby'
+            ]
+        :param name_list: vms name list
+        :param ops: string of operate
+        :return:
+        """
+        pool = ThreadPoolExecutor(max_workers=8)
+        futures = []
+        for name in name_list:
+            vm = self.get_vm_by_name(name)
+            futures.append(pool.submit(self.power_ops, vm, ops))
+        pool.shutdown()
+        future_results = [future.result() for future in as_completed(futures)]
+
+        return all(future_results)
+
+    def multi_destroy_vms(self, vm_list):
+        """
+        multi destroy VMs
+        :param vm_list: vm object list
+        :return:
+        """
+        pool = ThreadPoolExecutor(max_workers=8)
+        futures = []
+        for vm in vm_list:
+            futures.append(pool.submit(self.destroy_vm, vm))
+        pool.shutdown()
+        future_results = [future.result() for future in as_completed(futures)]
+
+        return all(future_results)
+
+    def get_vm_snapshots_by_name(self, vm, snap_name, show=False):
+        snap_list = []
+        for snapshot in vm.snapshot.rootSnapshotList:
+            if snapshot.name == snap_name:
+                snap_text = "Name: %s; Description: %s; CreateTime: %s; " \
+                            "State: %s" % (snapshot.name, snapshot.description,
+                                           snapshot.createTime, snapshot.state)
+                if show:
+                    logger.info(snap_text)
+                snap_list.append(snapshot)
+            else:
+                snap_list = snap_list + self.get_vm_snapshots_by_name(
+                    snapshot.childSnapshotList, snap_name)
+        return snap_list
+
+    def list_vm_snapshots(self, vm):
+        snapshot_data = []
+        for snapshot in vm.snapshot.rootSnapshotList:
+            snap_text = "Name: %s; Description: %s; CreateTime: %s; State: %s" % (
+                snapshot.name, snapshot.description,
+                snapshot.createTime, snapshot.state)
+            snapshot_data.append(snap_text)
+            snapshot_data = snapshot_data + self.list_vm_snapshots(
+                snapshot.childSnapshotList)
+        return snapshot_data
+
+    def create_vm_snapshot(self, vm, snap_name, snap_desc, memory=False):
+        task = vm.CreateSnapshot_Task(name=snap_name,
+                                      description=snap_desc,
+                                      memory=memory,
+                                      quiesce=False)
+        self.wait_for_tasks([task])
+        logger.info("Snapshot Completed.")
+        vm_ip = self.get_vm_ip(vm)
+        vm = self.get_vm_by_ip(vm_ip)
+        snap_info = vm.snapshot
+        tree = snap_info.rootSnapshotList
+        while tree[0].childSnapshotList is not None:
+            logger.info("Snap: {0} => {1}".format(
+                tree[0].name, tree[0].description))
+            if len(tree[0].childSnapshotList) < 1:
+                break
+            tree = tree[0].childSnapshotList
+        return True
+
+    def remove_vm_snapshot(self, vm, snap_name):
+        snap_list = self.get_vm_snapshots_by_name(vm, snap_name, show=True)
+        for snap in snap_list:
+            print("Removing snapshot %s" % snap_name)
+            WaitForTask(snap.RemoveSnapshot_Task(True))
+
+        return True
+
+    def remove_vm_all_snapshots(self, vm):
+        snapshot_paths = self.list_vm_snapshots(vm)
+        for snapshot in snapshot_paths:
+            print(snapshot)
+        print("Removing all snapshots for virtual machine %s" % vm.name)
+        WaitForTask(vm.RemoveAllSnapshots())
+
+        return True
+
+    def revert_vm_snapshot(self, vm, snap_name):
+        snap_list = self.get_vm_snapshots_by_name(vm, snap_name, show=True)
+        for snap in snap_list:
+            print("Reverting to snapshot %s" % snap_name)
+            WaitForTask(snap.RevertToSnapshot_Task())
+
+        return True
+
     # ================== Set VM ==================
+    def add_nic(self, vm, network_name):
+        """
+        add nic to vm
+        :param vm: Virtual Machine Object
+        :param network_name: Name of the Virtual Network
+        """
+        spec = vim.vm.ConfigSpec()
+        nic_changes = []
+
+        nic_spec = vim.vm.device.VirtualDeviceSpec()
+        nic_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
+
+        nic_spec.device = vim.vm.device.VirtualE1000()
+
+        nic_spec.device.deviceInfo = vim.Description()
+        nic_spec.device.deviceInfo.summary = 'vCenter API test'
+
+        network = self.get_obj([vim.Network], network_name)
+        if isinstance(network, vim.OpaqueNetwork):
+            nic_spec.device.backing = \
+                vim.vm.device.VirtualEthernetCard.OpaqueNetworkBackingInfo()
+            nic_spec.device.backing.opaqueNetworkType = \
+                network.summary.opaqueNetworkType
+            nic_spec.device.backing.opaqueNetworkId = \
+                network.summary.opaqueNetworkId
+        else:
+            nic_spec.device.backing = \
+                vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
+            nic_spec.device.backing.useAutoDetect = False
+            nic_spec.device.backing.deviceName = network
+
+        nic_spec.device.connectable = vim.vm.device.VirtualDevice.ConnectInfo()
+        nic_spec.device.connectable.startConnected = True
+        nic_spec.device.connectable.allowGuestControl = True
+        nic_spec.device.connectable.connected = False
+        nic_spec.device.connectable.status = 'untried'
+        nic_spec.device.wakeOnLanEnabled = True
+        nic_spec.device.addressType = 'assigned'
+
+        nic_changes.append(nic_spec)
+        spec.deviceChange = nic_changes
+        task_state = vm.ReconfigVM_Task(spec=spec)
+        logger.info("NIC CARD ADDED, rc={0}".format(task_state))
+
+    def del_nic(self, vm, nic_number):
+        """
+        Deletes virtual NIC based on nic number
+        :param vm: Virtual Machine Object
+        :param nic_number: Unit Number
+        :return: True if success
+        """
+        nic_prefix_label = 'Network adapter '
+        nic_label = nic_prefix_label + str(nic_number)
+        virtual_nic_device = None
+        for dev in vm.config.hardware.device:
+            if isinstance(dev, vim.vm.device.VirtualEthernetCard) \
+                    and dev.deviceInfo.label == nic_label:
+                virtual_nic_device = dev
+
+        if not virtual_nic_device:
+            raise RuntimeError('Virtual {} could not be found.'.format(nic_label))
+
+        virtual_nic_spec = vim.vm.device.VirtualDeviceSpec()
+        virtual_nic_spec.operation = \
+            vim.vm.device.VirtualDeviceSpec.Operation.remove
+        virtual_nic_spec.device = virtual_nic_device
+
+        spec = vim.vm.ConfigSpec()
+        spec.deviceChange = [virtual_nic_spec]
+        task = vm.ReconfigVM_Task(spec=spec)
+        self.wait_for_tasks([task])
+        return True
+
     @staticmethod
     def set_vm_network(vm, ip, subnet, gateway, dns_server, hostname):
         nic_num = 0
@@ -645,6 +995,226 @@ class VsphereApi(object):
             logger.info(('Reserve vm {0} cpu success'.format(vm.name)))
             return True
 
+    # ================== Clone VM ==================
+    def clone_vm(self, template, new_vm_name,
+                 linked_clone=False, snapshot_name=None,
+                 nic_network=None, datacenter_name=None, vm_folder=None,
+                 datastore_name=None, cluster_name=None, resource_pool=None,
+                 power_on=False, datastorecluster_name=None):
+        """
+        Clone a VM from a template/VM
+        :param template: Name of the template/VM you are cloning from
+        :param new_vm_name: Name of the VM you wish to make
+        :param linked_clone: if True, linked clone
+        :param snapshot_name: Name of snapshot for linked clone
+        :param nic_network: Name of the network to add to the VM
+        :param datacenter_name:Name of the Datacenter you wish to use.
+        If omitted, the first datacenter will be used
+        :param vm_folder: Name of the VMFolder you wish the VM to be dumped in
+        :param datastore_name: Datastore you wish the VM to end up on
+        :param cluster_name: Name of the cluster you wish the VM to end up on
+        :param resource_pool: Resource Pool to use.
+        :param power_on: power on the VM after creation
+        :param datastorecluster_name: Datastorecluster (DRS Storagepod) you
+        wish the VM to end up on
+
+        :return:
+        """
+
+        vm_template = self.get_obj([vim.VirtualMachine], template)
+        if vm_template is None:
+            raise Exception("VM template not found with name:%s" % template)
+
+        # if none git the first one
+        datacenter = self.get_obj([vim.Datacenter], datacenter_name)
+
+        if vm_folder:
+            destfolder = self.get_obj([vim.Folder], vm_folder)
+        else:
+            destfolder = datacenter.vmFolder
+
+        if datastore_name:
+            datastore = self.get_obj([vim.Datastore], datastore_name)
+        else:
+            datastore = self.get_obj([vim.Datastore],
+                                     vm_template.datastore[0].info.name)
+
+        # if None, get the first one
+        cluster = self.get_obj([vim.ClusterComputeResource], cluster_name)
+
+        if resource_pool:
+            resource_pool = self.get_obj([vim.ResourcePool], resource_pool)
+        else:
+            resource_pool = cluster.resourcePool
+
+        vmconf = vim.vm.ConfigSpec()
+
+        if datastorecluster_name:
+            podsel = vim.storageDrs.PodSelectionSpec()
+            pod = self.get_obj([vim.StoragePod], datastorecluster_name)
+            podsel.storagePod = pod
+
+            storagespec = vim.storageDrs.StoragePlacementSpec()
+            storagespec.podSelectionSpec = podsel
+            storagespec.type = 'create'
+            storagespec.folder = destfolder
+            storagespec.resourcePool = resource_pool
+            storagespec.configSpec = vmconf
+
+            try:
+                rec = self.content.storageResourceManager.RecommendDatastores(
+                    storageSpec=storagespec)
+                rec_action = rec.recommendations[0].action[0]
+                real_datastore_name = rec_action.destination.name
+            except Exception as e:
+                print(e)
+                real_datastore_name = vm_template.datastore[0].info.name
+
+            datastore = self.get_obj([vim.Datastore], real_datastore_name)
+
+        # set relospec
+        relospec = vim.vm.RelocateSpec()
+        relospec.datastore = datastore
+        relospec.pool = resource_pool
+        if linked_clone:
+            relospec.diskMoveType = 'createNewChildDiskBacking'
+
+        clonespec = vim.vm.CloneSpec()
+        clonespec.location = relospec
+        clonespec.powerOn = power_on
+        if linked_clone:
+            snap_list = vm_template.snapshot.rootSnapshotList
+            if not snap_list:
+                raise Exception('None snapshot on VM %s' % vm_template.name)
+            if snapshot_name:
+                while snap_list[0].childSnapshotList is not None:
+                    if snap_list[0].name == snapshot_name:
+                        logger.info("Snap: {0} => {1}".format(
+                            snap_list[0].name, snap_list[0].description))
+                        snap = snap_list[0]
+                        break
+                    snap_list = snap_list[0].childSnapshotList
+                else:
+                    raise Exception("Not find snapshot: %s" % snapshot_name)
+            else:
+                snap = snap_list[0]
+
+            clonespec.template = False
+            clonespec.snapshot = snap.snapshot
+
+        logger.info("Cloning VM ...")
+        task = vm_template.Clone(folder=destfolder, name=new_vm_name,
+                                 spec=clonespec)
+        self.wait_for_tasks([task])
+
+        vm = self.get_obj([vim.VirtualMachine], new_vm_name)
+        self.add_nic(vm, nic_network)
+
+    def linked_clone_vm(self, template, new_vm_name, snapshot_name=None,
+                        nic_network=None, datacenter_name=None, vm_folder=None,
+                        datastore_name=None, cluster_name=None,
+                        resource_pool=None, power_on=False,
+                        datastorecluster_name=None):
+        """
+        linked clone vm from snapshot
+        :param template:
+        :param new_vm_name:
+        :param snapshot_name:
+        :param nic_network:
+        :param datacenter_name:
+        :param vm_folder:
+        :param datastore_name:
+        :param cluster_name:
+        :param resource_pool:
+        :param power_on:
+        :param datastorecluster_name:
+        :return:
+        """
+
+        self.clone_vm(template, new_vm_name, True, snapshot_name,
+                      nic_network, datacenter_name, vm_folder,
+                      datastore_name, cluster_name, resource_pool,
+                      power_on, datastorecluster_name)
+
+    def relocate_vm(self, vm_name, host_dest, datastore_dest=None, **kwargs):
+        """
+        This method relocates vm to the host_dest across
+        datacenters, clusters, datastores managed by a vCenter
+        :param vm_name:
+        :param host_dest:
+        :param datastore_dest:
+        :param kwargs:
+        :return:
+        """
+
+        def construct_locator(src_disks, dest_ds_id):
+            """
+            Internal method to construct locator for the disks
+            :param src_disks:list of source template_disks
+            :param dest_ds_id:ID of destination datastore
+            :return:list of locator
+            """
+
+            ds_disk = []
+            for index, wdisk in enumerate(src_disks):
+                print("relocate index:" + str(index))
+                print("disk:" + str(wdisk))
+                disk_desc = str(wdisk.backing.fileName)
+                drive = disk_desc.split("]")[0].replace("[", "")
+                print("drive:" + drive)
+                print("wdisk.backing.fileName:" + wdisk.backing.fileName)
+                locator = vim.vm.RelocateSpec.DiskLocator()
+                locator.diskBackingInfo = wdisk.backing
+                locator.diskId = int(wdisk.key)
+                locator.datastore = dest_ds_id
+                ds_disk.append(locator)
+            return ds_disk
+
+        relocation_status = False
+        message = "relocate_vm passed"
+        try:
+            vm = self.get_obj([vim.VirtualMachine], vm_name)
+            current_host = vm.runtime.host.name
+            logger.info("vmotion_vm current_host:" + current_host)
+
+            # Create Relocate Spec
+            spec = vim.VirtualMachineRelocateSpec()
+
+            # Check whether compute vmotion required and construct spec accordingly
+            if host_dest is not None:
+                if current_host == host_dest:
+                    raise Exception("WARNING:: destination_host can not equal "
+                                    "current_host")
+
+                # Find destination host
+                destination_host = self.get_obj([vim.HostSystem], host_dest)
+                print("vmotion_vm destination_host:" + str(destination_host))
+                spec.host = destination_host
+
+                # Find destination Resource pool
+                resource_pool = destination_host.parent.resourcePool
+                print("vmotion_vm resource_pool:" + str(resource_pool))
+                spec.pool = resource_pool
+
+            # Check whether storage vmotion required and construct spec accordingly
+            if datastore_dest is not None:
+                # collect disks belong to the VM
+                template_disks = self.get_vm_disks(vm)
+                datastore_dest_id = self.get_obj([vim.Datastore], datastore_dest)
+                spec.datastore = datastore_dest_id
+                spec.disk = construct_locator(template_disks, datastore_dest_id)
+
+            logger.info("relocate_vm spec:" + str(spec))
+            task = vm.RelocateVM_Task(spec)
+            while task.info.state == vim.TaskInfo.State.running:
+                continue
+            relocation_status = True
+        except Exception as e:
+            message = "relocate_vm failed for vm:" + vm_name \
+                      + " with error:" + str(e)
+        print(message)
+        return relocation_status, message
+
     # ================== Get/Set ESXi ==================
     def get_esxi(self, esxi_host):
         esxi_view = self.content.viewManager.CreateContainerView(
@@ -674,17 +1244,66 @@ class VsphereApi(object):
                     return datacenter_name, cluster_name
         return datacenter_name, cluster_name
 
-    # ================== Get Resource ==================
+    # ===== Resource: dc/cluster/resource pool/datastore =====
+    def create_datacenter(self, dc_name=None, folder=None):
+        """
+        Creates a new datacenter with the given name.
+        Any % (percent) character used in this name parameter must be escaped,
+        unless it is used to start an escape sequence. Clients may also escape
+        any other characters in this name parameter.
+
+        An entity name must be a non-empty string of
+        less than 80 characters. The slash (/), backslash (\) and percent (%)
+        will be escaped using the URL syntax. For example, %2F
+
+        This can raise the following exceptions:
+        vim.fault.DuplicateName
+        vim.fault.InvalidName
+        vmodl.fault.NotSupported
+        vmodl.fault.RuntimeFault
+        ValueError raised if the name len is > 79
+        https://github.com/vmware/pyvmomi/blob/master/docs/vim/Folder.rst
+
+        Required Privileges
+        Datacenter.Create
+
+        :param folder: Folder object to create DC in. If None it will default to
+                       rootFolder
+        :param dc_name: Name for the new datacenter.
+        :return:
+        """
+        if len(dc_name) > 79:
+            raise ValueError("The name of the datacenter must be under "
+                             "80 characters.")
+        if folder is None:
+            folder = self.si.content.rootFolder
+
+        if folder is not None and isinstance(folder, vim.Folder):
+            dc_moref = folder.CreateDatacenter(name=dc_name)
+            return dc_moref
+
     @staticmethod
-    def get_object_in_list(obj_name, obj_list):
+    def create_cluster(datacenter, cluster_name, cluster_spec=None):
         """
-        Return an object out of a list (obj_list) who's name matches obj_name.
+        Method to create a Cluster in vCenter
+
+        :param datacenter:
+        :param cluster_name:
+        :param cluster_spec:
+        :return: Cluster MORef
         """
-        for obj in obj_list:
-            if obj.name == obj_name:
-                return obj
-        raise Exception("Unable to find object by the name of %s in list:\n%s"
-                        % (obj_name, map(lambda obj: obj.name, obj_list)))
+
+        if cluster_name is None:
+            raise ValueError("Missing value for name.")
+        if datacenter is None:
+            raise ValueError("Missing value for datacenter.")
+        if cluster_spec is None:
+            cluster_spec = vim.cluster.ConfigSpecEx()
+
+        host_folder = datacenter.hostFolder
+        cluster = host_folder.CreateClusterEx(name=cluster_name,
+                                              spec=cluster_spec)
+        return cluster
 
     @property
     def dc_objects(self):
@@ -846,14 +1465,14 @@ class VsphereApi(object):
         # Get datacenter object.
         datacenter_list = self.content.rootFolder.childEntity
         if datacenter_name:
-            datacenter_obj = self.get_object_in_list(datacenter_name, datacenter_list)
+            datacenter_obj = self.get_obj_in_list(datacenter_name, datacenter_list)
         else:
             datacenter_obj = datacenter_list[0]
 
         # Get datastore object.
         datastore_list = datacenter_obj.datastoreFolder.childEntity
         if datastore_name:
-            datastore_obj = self.get_object_in_list(datastore_name, datastore_list)
+            datastore_obj = self.get_obj_in_list(datastore_name, datastore_list)
         elif len(datastore_list) > 0:
             datastore_obj = datastore_list[0]
         else:
@@ -862,7 +1481,7 @@ class VsphereApi(object):
         # Get cluster object.
         cluster_list = datacenter_obj.hostFolder.childEntity
         if cluster_name:
-            cluster_obj = self.get_object_in_list(cluster_name, cluster_list)
+            cluster_obj = self.get_obj_in_list(cluster_name, cluster_list)
         elif len(cluster_list) > 0:
             cluster_obj = cluster_list[0]
         else:
