@@ -13,19 +13,22 @@ PyPI: **https://pypi.org/project/tlib**
 
 
 ## Catalogue
+1. [**bs**](https://github.com/txu2008/TLIB/blob/master/tlib/bs) Math calculate releated functions.
+1. [**data structure**](https://github.com/txu2008/TLIB/blob/master/tlib/data_structure) Data Structures operations.
+1. [**es**](https://github.com/txu2008/tlib/tree/master/tlib/es) ElasticSearch related test
+1. [**fileop**](https://github.com/txu2008/tlib/tree/master/tlib/fileop) File operation related functions
+1. [**jenkinslib**](https://github.com/txu2008/tlib/tree/master/tlib/jenkinslib) libs for jenkins
+1. [**log**](https://github.com/txu2008/TLIB/blob/master/tlib/log) logging config, colored, compress, log file/console.
+1. [**mail**](https://github.com/txu2008/TLIB/blob/master/tlib/mail) Send email, attachment.
+1. [**platform**](https://github.com/txu2008/tlib/tree/master/tlib/platform) Linux/windows platform operations,such as shell,cmd,ssh...
+1. [**pyvmomi**](https://github.com/txu2008/tlib/tree/master/tlib/pyvmomi) pyVmomi is the Python SDK for the VMware vSphere API that allows you to manage ESX, ESXi, and vCenter.
+1. [**retry**](https://github.com/txu2008/tlib/tree/master/tlib/retry) Decorators for retry func
+1. [**storage**](https://github.com/txu2008/tlib/tree/master/tlib/storage) Object related storage
+1. [**Stress Runner**](https://github.com/txu2008/TLIB/tree/master/tlib/stressrunner) A TestRunner generates a HTML report to show the result at a glance.
+1. [**utils**](https://github.com/txu2008/tlib/tree/master/tlib/utils) Some python utils
+1. [**validparam**](https://github.com/txu2008/tlib/tree/master/tlib/validparam) Decorators for verify param valid, verify param type, value range, ...
 1. [**vim-config**](https://github.com/txu2008/tlib/tree/master/tlib/vim-config) A easy vim configuration for python
-2. [**Stress Runner**](https://github.com/txu2008/TLIB/tree/master/tlib/stressrunner) A TestRunner generates a HTML report to show the result at a glance.
-3. [**log**](https://github.com/txu2008/TLIB/blob/master/tlib/log) logging config, colored, compress, log file/console.
-4. [**mail**](https://github.com/txu2008/TLIB/blob/master/tlib/mail) Send email, attachment.
-5. [**bs**](https://github.com/txu2008/TLIB/blob/master/tlib/bs) Math calculate releated functions.
-6. [**data structure**](https://github.com/txu2008/TLIB/blob/master/tlib/data_structure) Data Structures operations.
-7. [**validparam**](https://github.com/txu2008/tlib/tree/master/tlib/validparam) Decorators for verify param valid, verify param type, value range, ...
-8. [**platform**](https://github.com/txu2008/tlib/tree/master/tlib/platform) Linux/windows platform operations,such as shell,cmd,ssh...
-9. [**retry**](https://github.com/txu2008/tlib/tree/master/tlib/retry) Decorators for retry func
-10. [**jenkinslib**](https://github.com/txu2008/tlib/tree/master/tlib/jenkinslib) libs for jenkins
-11. [**fileop**](https://github.com/txu2008/tlib/tree/master/tlib/fileop) File operation related functions
-12. [**utils**](https://github.com/txu2008/tlib/tree/master/tlib/utils) Some python utils
-13. [**es**](https://github.com/txu2008/tlib/tree/master/tlib/es) ElasticSearch related test
+
 ...
 
 ## Quick Start
@@ -106,24 +109,15 @@ https://github.com/txu2008/tlib/wiki
 ## code directory tree:
 
 ```text
-tlib/tlib
-    |-- stressrunner            module              A TestRunner generates a HTML report to show the result at a glance.
-    |-- log                     module              logging config, colored, compress, log file/console.    
-    |-- mail                    module              Send email, attachment.
-    |-- bs                      module              Math calculate releated functions.
-    |-- data_structure          module              Data Structures operations.
-    |-- validparam              module              Decorators for verify param valid, verify param type, value range, ...
-    |-- platform                module              Linux/windows platform operations,such as shell,cmd,ssh...
-    |-- retry                   module              Decorators for retry func
-    |-- jenkinslib              module              libs for jenkins
-    |-- fileop                  module              File operation related functions
-    |-- util                    package             common func utils, etc
-    |-- es                      package             ElasticSearch related test
-    |-- __init__.py             module              Default __init__.py
-    |-- cache.py                module              Memory cache related module
-    |-- decorators.py           module              Decorators of python
-    |-- err.py                  module              Exception classes for tlib
-    |-- version.py              module              TLIB Version
+tlib
+    |-- docs                    module              Docments
+    |-- examples                module              tlib useage examples   
+    |-- test                    module              tlib unit test cases
+    |-- tlib                    module              tlib packages
+    |-- requirements.txt        module              Python package requirements, pip install -r requirements.txt
+    |-- Pipfile                 module              Python packages manage with pipenv
+    |-- run_test.py             module              An interface for run unit test, python run_test.py -h
+    |-- setup.py                module              Setup
 ....
 ```
 
