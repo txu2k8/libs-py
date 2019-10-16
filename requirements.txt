@@ -1,3 +1,4 @@
+pyVmomi
 superelasticsearch
 elasticsearch
 asn1crypto==0.24.0
