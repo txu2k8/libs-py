@@ -22,9 +22,9 @@ from tlib.utils import util
 logger = log.get_logger()
 
 
-class SSHObj(object):
+class SSHManager(object):
     """
-    SSH run cmd and scp
+    SSH Manager: exec_cmd/scp
     """
     _ssh = None
 
@@ -206,7 +206,7 @@ class SSHObj(object):
             raise e
 
 
-class SSHTestCase(unittest.TestCase):
+class SSHManagerTestCase(unittest.TestCase):
     """docstring for SSHTestCase"""
 
     def setUp(self):
@@ -216,8 +216,8 @@ class SSHTestCase(unittest.TestCase):
         pass
 
     def test_1(self):
-        ssh_obj = SSHObj(ip='10.25.119.1', username='root',
-                         password='password')
+        ssh_obj = SSHManager(ip='10.25.119.1', username='root',
+                             password='password')
         rc, output = ssh_obj.ssh_cmd('pwd')
         logger.info(output)
 
@@ -228,5 +228,5 @@ class SSHTestCase(unittest.TestCase):
 if __name__ == '__main__':
     # test
     unittest.main()
-    suite = unittest.TestLoader().loadTestsFromTestCase(SSHTestCase)
+    suite = unittest.TestLoader().loadTestsFromTestCase(SSHManagerTestCase)
     unittest.TextTestRunner(verbosity=2).run(suite)

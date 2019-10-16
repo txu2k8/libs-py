@@ -400,7 +400,7 @@ class VsphereApi(object):
                 vm.runtime.powerState))
 
         if vm.runtime.powerState == 'suspended':
-            logger.info('Suspend {0} success'.format(vm.name))
+            logger.info('{0} already suspended'.format(vm.name))
             return True
 
         task = vm.SuspendVM_Task()
@@ -417,7 +417,7 @@ class VsphereApi(object):
 
     def poweroff_vm(self, vm):
         if vm.runtime.powerState == 'poweredOff':
-            logger.info('Power off {0} success'.format(vm.name))
+            logger.info('{0} already poweredOff'.format(vm.name))
             return True
 
         task = vm.PowerOffVM_Task()
@@ -434,7 +434,7 @@ class VsphereApi(object):
 
     def shutdown_vm(self, vm):
         if vm.runtime.powerState == 'poweredOff':
-            logger.info('Shutdown {0} success'.format(vm.name))
+            logger.info('{0} already poweredOff'.format(vm.name))
             return True
 
         vm.ShutdownGuest()
@@ -448,7 +448,7 @@ class VsphereApi(object):
 
     def poweron_vm(self, vm):
         if vm.runtime.powerState == 'poweredOn':
-            logger.info('Power on {0} success'.format(vm.name))
+            logger.info('{0} already poweredOn'.format(vm.name))
             return True
 
         task = vm.PowerOnVM_Task()
@@ -528,6 +528,7 @@ class VsphereApi(object):
         }
 
         try:
+            logger.info('{0} vm {1} ...'.format(ops, vm.name))
             return power_opt[ops](vm)
         except Exception as e:
             raise Exception('Support power operate:{0}\n{1}'.format(
@@ -1590,7 +1591,9 @@ class VsphereApiTestCase(unittest.TestCase):
         pass
 
     def test_1(self):
-        print(self.vsp_api.get_deployment_objects('VIZION', '10.25.0.56-SSD-1', 'Vizion_Stress', 'txu'))
+        vm = self.vsp_api.get_vm_by_name('Ubuntu-txu-10251192')
+        rtn = self.vsp_api.power_ops(vm, 'poweron')
+        print(rtn)
 
     def test_get_vm_by_uuid(self):
         vm = self.vsp_api.get_vm_by_uuid('503ab6f6-d125-69bf-6a97-507948fa230a')
