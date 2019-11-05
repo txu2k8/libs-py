@@ -26,6 +26,7 @@ PyPI: **https://pypi.org/project/tlib**
 1. [**platform**](https://github.com/txu2008/tlib/tree/master/tlib/platform) Linux/windows platform operations,such as shell,cmd,ssh_manager...
 1. [**pyvmomi**](https://github.com/txu2008/tlib/tree/master/tlib/pyvmomi) pyVmomi is the Python SDK for the VMware vSphere API that allows you to manage ESX, ESXi, and vCenter.
 1. [**retry**](https://github.com/txu2008/tlib/tree/master/tlib/retry) Decorators for retry func
+1. [**schedule**](https://github.com/txu2008/tlib/tree/master/tlib/schedule) Decorators for schedule the func task and list the tasks with PrettyTable
 1. [**storage**](https://github.com/txu2008/tlib/tree/master/tlib/storage) Object related storage
 1. [**Stress Runner**](https://github.com/txu2008/TLIB/tree/master/tlib/stressrunner) A TestRunner generates a HTML report to show the result at a glance.
 1. [**utils**](https://github.com/txu2008/tlib/tree/master/tlib/utils) Some python utils
