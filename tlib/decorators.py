@@ -16,7 +16,7 @@ import threading
 from functools import wraps
 from datetime import datetime as datetime_in
 
-from tlib import err
+from tlib import exceptions as err
 from tlib import log
 
 __all__ = [

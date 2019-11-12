@@ -4,10 +4,7 @@
 # @Author  : Tao.Xu
 # @Email   : tao.xu2008@outlook.com
 
-"""
-:description:
-    error related module
-"""
+"""Define exceptions"""
 
 __all__ = [
     'BaseTestException', 'DecoratorException', 'LoggerException',

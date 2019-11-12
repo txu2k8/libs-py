@@ -12,7 +12,7 @@ import os
 import sys
 import fcntl
 
-from tlib import err
+from tlib import exceptions as err
 from tlib import decorators
 
 

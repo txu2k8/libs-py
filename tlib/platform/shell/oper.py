@@ -27,7 +27,7 @@ import subprocess
 
 import tlib
 from tlib import decorators
-from tlib import err
+from tlib import exceptions as err
 from tlib import log
 
 

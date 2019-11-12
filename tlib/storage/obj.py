@@ -16,7 +16,7 @@ import ftplib
 import logging
 
 from tlib import log
-from tlib import err
+from tlib import exceptions as err
 
 
 __all__ = [

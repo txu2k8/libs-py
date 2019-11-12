@@ -23,7 +23,7 @@
 # import collections
 
 # import tlib
-# from tlib import err
+# from tlib import exceptions as err
 from tlib.platform.shell import oper
 
 from tlib.platform.shell.oper import md5file
