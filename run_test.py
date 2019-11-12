@@ -12,8 +12,8 @@ import os
 import sys
 import argparse
 import unittest
-from libs.stressrunner import StressRunner
-from libs import log
+from tlib.stressrunner import StressRunner
+from tlib import log
 
 CUR = os.getcwd()
 LOG_PATH = os.path.join(r'C:\Users\user\Documents', 'log')

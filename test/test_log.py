@@ -11,9 +11,9 @@ Test suite 1: TestCases for log.py
 import logging
 import unittest
 
-from libs.stressrunner import StressRunner
-from libs import log
-from libs.utils.util import sleep_progressbar
+from tlib.stressrunner import StressRunner
+from tlib import log
+from tlib.utils.util import sleep_progressbar
 
 
 test_logger = log.get_logger()

@@ -98,7 +98,7 @@ def set_subparsers_suite(sub_parser):
     :return:
     """
 
-    from libs.es.argument import tc_es_parsers
+    from tlib.es.argument import tc_es_parsers
 
     tc_log_parsers(sub_parser)
     tc_mail_parsers(sub_parser)
