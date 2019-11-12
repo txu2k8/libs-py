@@ -16,7 +16,7 @@ PyPI: **https://pypi.org/project/tlib**
 1. [**aws**](https://github.com/txu2008/TLIB/blob/master/tlib/aws) AWS SDK APIs for Python.
 1. [**bs**](https://github.com/txu2008/TLIB/blob/master/tlib/bs) Math calculate releated functions.
 1. [**data structure**](https://github.com/txu2008/TLIB/blob/master/tlib/data_structure) Data Structures operations.
-1. [**data base**](https://github.com/txu2008/TLIB/blob/master/tlib/data_base) Data Base related API/Packages.
+1. [**data base**](https://github.com/txu2008/TLIB/blob/master/tlib/db) Data Base related API/Packages.
 1. [**es**](https://github.com/txu2008/tlib/tree/master/tlib/es) ElasticSearch related test
 1. [**fileop**](https://github.com/txu2008/tlib/tree/master/tlib/fileop) File operation related functions
 1. [**jenkinslib**](https://github.com/txu2008/tlib/tree/master/tlib/jenkinslib) libs for jenkins
@@ -24,7 +24,7 @@ PyPI: **https://pypi.org/project/tlib**
 1. [**log**](https://github.com/txu2008/TLIB/blob/master/tlib/log) logging config, colored, compress, log file/console.
 1. [**mail**](https://github.com/txu2008/TLIB/blob/master/tlib/mail) Send email, attachment.
 1. [**platform**](https://github.com/txu2008/tlib/tree/master/tlib/platform) Linux/windows platform operations,such as shell,cmd,ssh_manager...
-1. [**pyvmomi**](https://github.com/txu2008/tlib/tree/master/tlib/pyvmomi) pyVmomi is the Python SDK for the VMware vSphere API that allows you to manage ESX, ESXi, and vCenter.
+1. [**vsphere**](https://github.com/txu2008/tlib/tree/master/tlib/vsphere) pyVmomi is the Python SDK for the VMware vSphere API that allows you to manage ESX, ESXi, and vCenter.
 1. [**retry**](https://github.com/txu2008/tlib/tree/master/tlib/retry) Decorators for retry func
 1. [**schedule**](https://github.com/txu2008/tlib/tree/master/tlib/schedule) Decorators for schedule the func task and list the tasks with PrettyTable
 1. [**storage**](https://github.com/txu2008/tlib/tree/master/tlib/storage) Object related storage

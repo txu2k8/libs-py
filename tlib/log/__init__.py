@@ -11,5 +11,5 @@ __all__ = [
     'init_logger', 'set_loglevel', 'get_inited_logger_name', 'basic_config',
     'ROTATION', 'INFINITE', 'parse_msg',
     'backtrace_info', 'backtrace_debug', 'backtrace_error', 'backtrace_critical',
-    'debug_if', 'info_if', 'error_if', 'warn_if', 'critical_if', get_logger
+    'debug_if', 'info_if', 'error_if', 'warn_if', 'critical_if', 'get_logger'
 ]
