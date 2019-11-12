@@ -10,9 +10,9 @@ Test suite 1: TestCases for mail.py
 
 import unittest
 
-from tlib.stressrunner import StressRunner
-from tlib import log
-from tlib.mail import SmtpServer, Mail, SmtpMailer, mutt_sendmail
+from libs.stressrunner import StressRunner
+from libs import log
+from libs.mail import SmtpServer, Mail, SmtpMailer, mutt_sendmail
 
 
 logger = log.get_logger()

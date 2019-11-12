@@ -37,7 +37,7 @@ Visit examples to see .examples/*
 # Examples:
 
 # 1. Init logging logger
-from tlib import log
+from libs import log
 logger = log.get_logger(logfile='test1.log', logger_name='test1', debug=True, reset_logger=True)
 logger.info('test_1 start ...')
 logger.warning('test_1 hello,world')
@@ -47,7 +47,7 @@ logger.critical('test_1 hello,world')
 
 # 2. stressrunner
 import unittest
-from tlib.stressrunner import StressRunner
+from libs.stressrunner import StressRunner
 from test.test_mail import TestMail
 runner = StressRunner(
         report_path='sr_test.log',
