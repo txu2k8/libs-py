@@ -12,7 +12,7 @@ Decorators for retry func
 
 #### Usage
 ```python
-from tlib.retry import retry, retry_call
+from libs.retry import retry, retry_call
 
 @retry(tries=3, delay=10, jitter=1)
 def test_1(a):

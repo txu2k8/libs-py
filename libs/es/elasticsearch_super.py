@@ -11,8 +11,8 @@ import superelasticsearch
 from superelasticsearch import SuperElasticsearch
 from elasticsearch import serializer, exceptions
 
-from tlib import log
-from tlib.retry import retry
+from libs import log
+from libs.retry import retry
 
 if sys.version_info > (3, 0, 0):
     from imp import reload

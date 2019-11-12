@@ -12,8 +12,8 @@ import ast
 import logging
 import pprint
 
-import tlib
-from tlib.jenkinslib.internal import exception
+import libs
+from libs.jenkinslib.internal import exception
 
 INVALID_CHARS = ['\0', '\12', '\15']
 

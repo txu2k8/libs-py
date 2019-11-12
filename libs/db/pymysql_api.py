@@ -9,7 +9,7 @@
 import pymysql
 import unittest
 
-from tlib import log
+from libs import log
 
 # =============================
 # --- Global

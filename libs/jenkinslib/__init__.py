@@ -45,10 +45,10 @@ usage:
 """
 
 import os
-from tlib.jenkinslib import internal
-from tlib.jenkinslib.internal import exception as _exception
-from tlib.jenkinslib.internal import jenkins as _jenkins
-from tlib.jenkinslib.internal import promotion as _promotion
+from libs.jenkinslib import internal
+from libs.jenkinslib.internal import exception as _exception
+from libs.jenkinslib.internal import jenkins as _jenkins
+from libs.jenkinslib.internal import promotion as _promotion
 
 # import Jenkins and Promotion
 Jenkins = _jenkins.Jenkins

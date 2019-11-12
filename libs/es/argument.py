@@ -151,10 +151,10 @@ def tc_es_parsers(subparsers):
 
 def test_suite_common(args):
     if args.suite == 'stress':
-        from tlib.es.elasticsearch_stress import ElasticsearchStressTestCase \
+        from libs.es.elasticsearch_stress import ElasticsearchStressTestCase \
             as CurrentTestCase
     elif args.suite == 'index':
-        from tlib.es.elasticsearch_index import ElasticsearchIndexTestCase \
+        from libs.es.elasticsearch_index import ElasticsearchIndexTestCase \
             as CurrentTestCase
     else:
         raise Exception("Not support the test suite {0}".format(args.suite))

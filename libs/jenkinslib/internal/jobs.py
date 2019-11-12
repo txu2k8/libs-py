@@ -9,7 +9,7 @@ This module provides Jobs object.
 Jobs is a container of Job.
 """
 
-from tlib.jenkinslib.internal import exception
+from libs.jenkinslib.internal import exception
 
 
 class Jobs(object):

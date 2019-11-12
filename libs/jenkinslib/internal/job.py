@@ -16,10 +16,10 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
 
-import tlib
-from tlib.jenkinslib.internal import base
-from tlib.jenkinslib.internal import exception
-from tlib.jenkinslib.internal import queue
+import libs
+from libs.jenkinslib.internal import base
+from libs.jenkinslib.internal import exception
+from libs.jenkinslib.internal import queue
 
 
 class Job(base.JenkinsBase):

@@ -12,7 +12,7 @@ libs for jenkins
 
 #### Usage
 ```python
-from tlib import jenkinslib
+from libs import jenkinslib
 
 if __name__ == "__main__":
     # TODO

@@ -31,7 +31,7 @@ import threading
 import coloredlogs
 from logging import handlers
 
-from tlib import err
+from libs import err
 
 
 # ---------------------------

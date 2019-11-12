@@ -12,9 +12,9 @@ import contextlib
 import logging
 import time
 
-from tlib.jenkinslib.internal import base
-from tlib.jenkinslib.internal import exception
-from tlib.jenkinslib.internal import utils
+from libs.jenkinslib.internal import base
+from libs.jenkinslib.internal import exception
+from libs.jenkinslib.internal import utils
 
 
 class Build(base.JenkinsBase):

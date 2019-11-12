@@ -20,9 +20,9 @@ from email.mime import base
 from email.mime import image
 from email.mime import text
 
-from tlib import log
-from tlib import decorators
-from tlib.platform import shell
+from libs import log
+from libs import decorators
+from libs.platform import shell
 
 logger = log.get_logger()
 

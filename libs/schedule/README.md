@@ -12,7 +12,7 @@ Decorators for schedule the func task and list the tasks with PrettyTable
 
 #### Usage
 ```python
-from tlib.schedule import enter_phase, run_phase
+from libs.schedule import enter_phase, run_phase
 
 @enter_phase(comments='test----1')
 def func_1(a, b):

@@ -15,8 +15,8 @@ generates a HTML report to show the result at a glance.
 ```python
 import unittest
 
-from tlib import log
-from tlib.stressrunner import StressRunner
+from libs import log
+from libs.stressrunner import StressRunner
 from test.test_mail import TestMail
 
 logger = log.get_logger()

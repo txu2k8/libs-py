@@ -36,7 +36,7 @@ except ImportError:
         def emit(self, record):
             pass
 
-from tlib import log
+from libs import log
 
 # ======================
 # --- Global

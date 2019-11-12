@@ -12,9 +12,9 @@ import scp
 import inspect
 import unittest
 
-from tlib import log
-from tlib.retry import retry, retry_call
-from tlib.utils import util
+from libs import log
+from libs.retry import retry, retry_call
+from libs.utils import util
 
 # =============================
 # --- Global

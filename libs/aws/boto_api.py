@@ -15,8 +15,8 @@ import boto
 import boto.ec2
 import boto.iam
 
-from tlib import log
-from tlib.retry import retry
+from libs import log
+from libs.retry import retry
 
 # =============================
 # --- Global

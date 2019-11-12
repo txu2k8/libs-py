@@ -15,8 +15,8 @@ import ftplib
 # import traceback
 import logging
 
-from tlib import log
-from tlib import err
+from libs import log
+from libs import err
 
 
 __all__ = [

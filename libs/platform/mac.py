@@ -9,7 +9,7 @@
 from __future__ import print_function
 import os
 
-from tlib import decorators
+from libs import decorators
 
 
 __all__ = [

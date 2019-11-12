@@ -20,8 +20,8 @@ from boto3.s3 import transfer
 from botocore.exceptions import ClientError
 from botocore.client import Config
 
-from tlib import log
-from tlib.retry import retry
+from libs import log
+from libs.retry import retry
 
 urllib3.disable_warnings()
 

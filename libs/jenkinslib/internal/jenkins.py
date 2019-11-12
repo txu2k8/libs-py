@@ -10,21 +10,21 @@ This module provides Jenkins object.
 
 import os
 
-import tlib
-import tlib.jenkinslib.internal
-from tlib.jenkinslib.internal import artifacts
-from tlib.jenkinslib.internal import base
-from tlib.jenkinslib.internal import build
-from tlib.jenkinslib.internal import exception
-from tlib.jenkinslib.internal import job
-from tlib.jenkinslib.internal import jobs
-from tlib.jenkinslib.internal import promotion
-from tlib.jenkinslib.internal import promotion_build
-from tlib.jenkinslib.internal import promotions
-from tlib.jenkinslib.internal import node
-from tlib.jenkinslib.internal import nodes
-from tlib.jenkinslib.internal import label
-from tlib.jenkinslib.internal import requester
+import libs
+import libs.jenkinslib.internal
+from libs.jenkinslib.internal import artifacts
+from libs.jenkinslib.internal import base
+from libs.jenkinslib.internal import build
+from libs.jenkinslib.internal import exception
+from libs.jenkinslib.internal import job
+from libs.jenkinslib.internal import jobs
+from libs.jenkinslib.internal import promotion
+from libs.jenkinslib.internal import promotion_build
+from libs.jenkinslib.internal import promotions
+from libs.jenkinslib.internal import node
+from libs.jenkinslib.internal import nodes
+from libs.jenkinslib.internal import label
+from libs.jenkinslib.internal import requester
 
 
 class Jenkins(base.JenkinsBase):

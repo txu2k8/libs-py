@@ -71,8 +71,8 @@ import socket
 from xml.sax import saxutils
 import unittest
 
-from tlib.mail import SmtpServer, Mail
-from tlib.stressrunner import template
+from libs.mail import SmtpServer, Mail
+from libs.stressrunner import template
 
 
 # =============================

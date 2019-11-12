@@ -20,10 +20,10 @@ import inspect
 import paramiko
 
 
-from tlib import log
-from tlib.bs import strsize_to_byte
-from tlib.data_structure import escape
-from tlib.retry import retry, retry_call
+from libs import log
+from libs.bs import strsize_to_byte
+from libs.data_structure import escape
+from libs.retry import retry, retry_call
 
 # =============================
 # --- Global Value

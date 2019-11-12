@@ -25,9 +25,9 @@ from elasticsearch.connection import create_ssl_context
 from elasticsearch.exceptions import TransportError, NotFoundError
 
 
-from tlib import log, const
-from tlib.retry import retry
-from tlib.utils import util
+from libs import log, const
+from libs.retry import retry
+from libs.utils import util
 
 # =============================
 # --- Global

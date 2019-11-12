@@ -19,8 +19,8 @@ import filecmp
 import json
 import copy
 
-from tlib import log
-from tlib.utils import util
+from libs import log
+from libs.utils import util
 
 
 # ======================

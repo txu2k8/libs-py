@@ -6,6 +6,6 @@
 
 """StressRunner inherit from TextTestRunner"""
 
-from tlib.stressrunner.runner import StressRunner
+from libs.stressrunner.runner import StressRunner
 
 __all__ = ['StressRunner']

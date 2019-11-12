@@ -14,7 +14,7 @@ import pprint
 import socket
 import urlparse
 
-from tlib.jenkinslib.internal import exception
+from libs.jenkinslib.internal import exception
 
 
 class ArtifactsBase(object):

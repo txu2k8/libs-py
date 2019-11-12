@@ -17,8 +17,8 @@ from subprocess import check_output, CalledProcessError
 from os.path import expanduser
 import threading
 
-from tlib import log
-from tlib.retry import retry_call
+from libs import log
+from libs.retry import retry_call
 
 
 # =============================

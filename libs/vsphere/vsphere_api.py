@@ -29,9 +29,9 @@ from pyVim.task import WaitForTask
 from pyVmomi import vim
 from pyVmomi import vmodl
 
-from tlib import log
-from tlib.retry import retry
-from tlib.utils import util
+from libs import log
+from libs.retry import retry
+from libs.utils import util
 
 # =============================
 # --- Global

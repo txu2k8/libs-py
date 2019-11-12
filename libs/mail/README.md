@@ -12,7 +12,7 @@ Send email, attachment.
 
 #### Usage
 ```python
-from tlib import mail
+from libs import mail
 
 if __name__ == "__main__":
     # Solution 1: SmtpServer + Mail

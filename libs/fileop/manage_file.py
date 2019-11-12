@@ -25,8 +25,8 @@ import traceback
 import errno
 from collections import Iterable
 
-from tlib import log
-from tlib.platform.cmd import DosCmd, MacCmd
+from libs import log
+from libs.platform.cmd import DosCmd, MacCmd
 
 # =============================
 # --- Global

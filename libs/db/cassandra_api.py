@@ -11,8 +11,8 @@ from cassandra import ConsistencyLevel
 from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 
-from tlib import log
-from tlib.retry import retry
+from libs import log
+from libs.retry import retry
 
 ssl._create_default_https_context = ssl._create_unverified_context
 

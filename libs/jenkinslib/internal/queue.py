@@ -9,8 +9,8 @@ This module provides Queue object.
 """
 
 import time
-from tlib.jenkinslib.internal import base
-from tlib.jenkinslib.internal import exception
+from libs.jenkinslib.internal import base
+from libs.jenkinslib.internal import exception
 
 
 class Queue(base.JenkinsBase):

@@ -16,8 +16,8 @@ import threading
 from functools import wraps
 from datetime import datetime as datetime_in
 
-from tlib import err
-from tlib import log
+from libs import err
+from libs import log
 
 __all__ = [
     'Singleton', 'print_for_call', 'TraceUsedTime', 'needlinux', 'needposix', 'needmac',

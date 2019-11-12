@@ -8,8 +8,8 @@
 This module provides some requester to access jenkins.
 """
 
-from tlib.thirdp import requests
-from tlib.jenkinslib.internal import exception
+from libs.thirdp import requests
+from libs.jenkinslib.internal import exception
 
 
 class Requester(object):

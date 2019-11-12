@@ -8,7 +8,7 @@
 This module provides Node object.
 """
 
-from tlib.jenkinslib.internal import base
+from libs.jenkinslib.internal import base
 
 
 class Node(base.JenkinsBase):

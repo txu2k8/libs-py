@@ -9,8 +9,8 @@ This module provides Promotions object.
 Promotions is a container of Promotion.
 """
 
-from tlib.jenkinslib.internal import base
-from tlib.jenkinslib.internal import exception
+from libs.jenkinslib.internal import base
+from libs.jenkinslib.internal import exception
 
 
 class Promotions(base.JenkinsBase):

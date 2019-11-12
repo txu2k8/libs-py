@@ -14,7 +14,7 @@ from collections import OrderedDict
 from functools import wraps
 
 import yaml
-from tlib import log
+from libs import log
 
 PY2 = sys.version_info[0] == 2
 if PY2:

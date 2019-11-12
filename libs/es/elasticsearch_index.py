@@ -12,11 +12,11 @@ import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import unittest
 
-from tlib.es.elasticsearch_super import EsSuper
-from tlib.es.es_doc_setting import TEST_META_INDEX_SETTING
-from tlib import log, const
-from tlib.retry import retry
-from tlib.utils import util
+from libs.es.elasticsearch_super import EsSuper
+from libs.es.es_doc_setting import TEST_META_INDEX_SETTING
+from libs import log, const
+from libs.retry import retry
+from libs.utils import util
 
 # =============================
 # --- Global

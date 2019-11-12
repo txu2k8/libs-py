@@ -21,7 +21,7 @@ import unittest
 from functools import wraps, partial
 from prettytable import PrettyTable
 
-from tlib.log import log
+from libs.log import log
 
 # ======================
 # --- Global

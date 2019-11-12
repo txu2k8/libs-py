@@ -9,8 +9,8 @@ This module provides Label object.
 Label is a container of Node.
 """
 
-from tlib.jenkinslib.internal import base
-from tlib.jenkinslib.internal import exception
+from libs.jenkinslib.internal import base
+from libs.jenkinslib.internal import exception
 
 
 class Label(base.JenkinsBase):

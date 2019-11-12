@@ -10,8 +10,8 @@ This module provides Promotion object.
 
 import logging
 
-from tlib.jenkinslib.internal import base
-from tlib.jenkinslib.internal import exception
+from libs.jenkinslib.internal import base
+from libs.jenkinslib.internal import exception
 
 
 class Promotion(base.JenkinsBase):

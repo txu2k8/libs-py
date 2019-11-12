@@ -13,8 +13,8 @@ from functools import wraps
 from progressbar import ProgressBar, Percentage, Bar, RotatingMarker, ETA
 import hashlib
 
-from tlib import log
-from tlib.retry import retry
+from libs import log
+from libs.retry import retry
 
 # =============================
 # --- Global Value

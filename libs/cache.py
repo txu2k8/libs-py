@@ -12,8 +12,8 @@ import time
 import collections
 import contextlib
 
-import tlib
-from tlib.utils.util import thread
+import libs
+from libs.utils.util import thread
 
 
 class KvCache(object):
@@ -39,7 +39,7 @@ class KvCache(object):
             yield
         # pylint: disable=W0703
         except Exception as error:
-            tlib.log.warn('something happend in cache:%s' % error)
+            libs.log.warn('something happend in cache:%s' % error)
         finally:
             if b_rw_lock is True:
                 self._lock.release_writelock()
@@ -61,7 +61,7 @@ class KvCache(object):
         with self._lock_release(b_rw_lock=True):
             for key in kvlist:
                 if key in self._kv_data:
-                    tlib.log.debug('Key:%s of KvCache updated.' % key)
+                    libs.log.debug('Key:%s of KvCache updated.' % key)
                 self._kv_data[key] = (kvlist[key], expire_value)
 
     def get(self, key):
@@ -77,7 +77,7 @@ class KvCache(object):
             if expire_sec is not None and time.time() > expire_sec:
                 return None
             else:
-                tlib.log.debug('key:%s of kvCache fetched.' % key)
+                libs.log.debug('key:%s of kvCache fetched.' % key)
                 return value
         return None
 
@@ -99,7 +99,7 @@ class KvCache(object):
             expired_keys = self._get_expired_keys()
             for key in expired_keys:
                 del self._kv_data[key]
-                tlib.log.debug('key:%s cleaned up' % key)
+                libs.log.debug('key:%s cleaned up' % key)
         return expired_keys
 
     def get_expired(self):

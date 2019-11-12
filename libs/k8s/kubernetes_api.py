@@ -15,9 +15,9 @@ from kubernetes import config, client
 from kubernetes.stream import stream
 from kubernetes.client.rest import ApiException
 
-from tlib import log
-from tlib.utils import util
-from tlib.retry import retry
+from libs import log
+from libs.utils import util
+from libs.retry import retry
 
 # =============================
 # --- Global Value

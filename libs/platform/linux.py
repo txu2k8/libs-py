@@ -21,7 +21,7 @@ import collections
 from functools import wraps
 import unittest
 
-from tlib import decorators, err
+from libs import decorators, err
 
 
 __all__ = [

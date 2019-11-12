@@ -12,7 +12,7 @@ Math calculate releated functions.
 
 #### Usage
 ```python
-from tlib.bs import *
+from libs.bs import *
 
 if __name__ == '__main__':
     print(binary_system(2542, 7, 12))  # 将7进制的2542转为12进制

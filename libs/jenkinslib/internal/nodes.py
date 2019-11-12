@@ -9,8 +9,8 @@ This module provides Nodes object.
 Nodes is a container of Node.
 """
 
-from tlib.jenkinslib.internal import base
-from tlib.jenkinslib.internal import exception
+from libs.jenkinslib.internal import base
+from libs.jenkinslib.internal import exception
 
 
 class Nodes(base.JenkinsBase):

@@ -12,8 +12,8 @@ import os
 import sys
 import fcntl
 
-from tlib import err
-from tlib import decorators
+from libs import err
+from libs import decorators
 
 
 __all__ = [
