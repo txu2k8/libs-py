@@ -22,7 +22,7 @@ import paramiko
 
 from libs import log
 from libs.bs import strsize_to_byte
-from libs.data_structure import escape
+from libs.ds import escape
 from libs.retry import retry, retry_call
 
 # =============================

@@ -24,7 +24,7 @@ if sys.version_info < (2, 6):
 
 
 __all__ = [
-    'bs', 'data_structure', 'fileop', 'retry', 'stressrunner', 'log',
+    'bs', 'ds', 'fileop', 'retry', 'stressrunner', 'log',
     'validparam', 'platform', 'mail', 'utils',
     'err', 'decorators', 'version', 'test'
 ]
