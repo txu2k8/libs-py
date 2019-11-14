@@ -122,16 +122,16 @@ class SSHManager(object):
             std_err = stderr.read().decode('UTF-8', 'ignore')
             return std_out, std_err
         except Exception as e:
-            raise Exception(
-                'Failed to run command: {0}\n{1}'.format(cmd_spec, e))
+            raise Exception('Failed to run: {0}\n{1}'.format(cmd_spec, e))
 
     def ssh_cmd(self, cmd_spec, expected_rc=0, timeout=7200, get_pty=False,
                 docker_image=None, tries=3, delay=3):
         """
         ssh and run cmd
         """
-        method_name = inspect.stack()[1][
-            3]  # Get name of the calling method, returns <methodName>'
+
+        # Get name of the calling method, returns <methodName>'
+        method_name = inspect.stack()[1][3]
         stdout, stderr = retry_call(self.paramiko_ssh_cmd,
                                     fkwargs={'cmd_spec': cmd_spec,
                                              'timeout': timeout,
@@ -204,6 +204,14 @@ class SSHManager(object):
             return True
         except Exception as e:
             raise e
+
+    def mkdir_remote_path_if_not_exist(self, remote_path):
+        cmd1 = 'ls {path}'.format(path=remote_path)
+        rc, output = self.ssh_cmd(cmd1, expected_rc='ignore', tries=2)
+        if 'No such file or directory' in output:
+            cmd2 = 'mkdir -p {path}'.format(path=remote_path)
+            self.ssh_cmd(cmd2)
+        return True
 
 
 class SSHManagerTestCase(unittest.TestCase):

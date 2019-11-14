@@ -26,7 +26,7 @@ logger = log.get_logger()
 urllib3.disable_warnings()
 
 
-class KubernetesObj(object):
+class KubernetesApi(object):
     is_connected = None
     _corev1api = None
     _appsv1betaapi = None

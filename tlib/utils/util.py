@@ -15,6 +15,8 @@ import hashlib
 
 from tlib import log
 from tlib.retry import retry
+from tlib.bs import ip_to_int, int_to_ip
+from tlib.platform.platforms import run_cmd, ssh_cmd
 
 # =============================
 # --- Global Value
@@ -219,7 +221,7 @@ def get_file_md5(f_name):
     return md5_info
 
 
-def verify_path(local_path):
+def mkdir_path_if_not_exist(local_path):
     """
     verify the local path exist, if not create it
     :param local_path:
@@ -230,6 +232,88 @@ def verify_path(local_path):
             os.makedirs(local_path)
         except OSError as e:
             raise Exception(e)
+
+
+def ip_to_int(ip):
+    """
+    convert ip(ipv4) address to a int num
+    :param ip:
+    :return: int num
+    """
+
+    lp = [int(x) for x in ip.split('.')]
+    return lp[0] << 24 | lp[1] << 16 | lp[2] << 8 | lp[3]
+
+
+def int_to_ip(num):
+    """
+    convert int num to ip(ipv4) address
+    :param num:
+    :return:
+    """
+
+    ip = ['', '', '', '']
+    ip[3] = (num & 0xff)
+    ip[2] = (num & 0xff00) >> 8
+    ip[1] = (num & 0xff0000) >> 16
+    ip[0] = (num & 0xff000000) >> 24
+    return '%s.%s.%s.%s' % (ip[0], ip[1], ip[2], ip[3])
+
+
+def is_ping_ok(ip, retry=30):
+    """
+    Check if the machine can ping successful
+    :param ip:
+    :param retry:
+    :return:(bool) True / False
+    """
+
+    if WINDOWS:
+        cmd = "ping %s" % ip
+    elif POSIX:
+        cmd = "ping -c1 %s" % ip
+    else:
+        cmd = "ping %s" % ip
+
+    for x in range(retry):
+        rc, output = run_cmd(cmd, expected_rc='ignore')
+        if "ttl=" in output.lower():
+            logger.info(ip + ' is Reachable')
+            return True
+        else:
+            logger.warning(ip + ' is Not Reachable')
+            time.sleep(3)
+            continue
+    else:
+        return False
+
+
+def get_reachable_ip(ip_list, ping_retry=3):
+    for ip in ip_list:
+        if is_ping_ok(ip, ping_retry):
+            return ip
+    else:
+        raise Exception('All ips not reachable! {0}'.format(ip_list))
+
+
+def get_unused_ip(ip_start, wasteful=True):
+    """
+    get unused ip
+    :param ip_start:
+    :param wasteful: If True, will skip the ip_start
+    :return:
+    """
+    ip_start_num = ip_to_int(ip_start)
+    if wasteful:
+        ip_start_num += 1
+    while True:
+        new_ip = int_to_ip(ip_start_num)
+        if is_ping_ok(new_ip, retry=1):
+            ip_start_num += 1
+            continue
+        else:
+            break
+    return new_ip
 
 
 if __name__ == "__main__":

@@ -1,11 +1,11 @@
-## **platform**
-[![](https://img.shields.io/badge/Project-platform-yellow.svg)]()
+## **ssh_manager**
+[![](https://img.shields.io/badge/Project-ssh_manager-yellow.svg)]()
 [![](https://img.shields.io/badge/Python-2.7-green.svg)]()
 [![](https://img.shields.io/badge/Python-3.6-green.svg)]()
 [![](https://img.shields.io/badge/Email-tao.xu2008@outlook.com-red.svg)]()
 [![](https://img.shields.io/badge/Blog-https://txu2008.github.io-red.svg)][1]
 
-platform func
+ssh manager
 
 #### Install
     pip install tlib

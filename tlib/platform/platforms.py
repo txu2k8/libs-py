@@ -125,9 +125,9 @@ def subprocess_popen_cmd(cmd_spec, output=True, timeout=7200):
             # (stdout, stderr) = p.communicate()
             stdout, stderr = p.stdout.read(), p.stderr.read()
             if rc == 0:
-                std_out_err = escape(stdout)
+                std_out_err = stdout.decode("utf-8", 'ignore')  # escape(stdout)
             else:
-                std_out_err = escape(stderr)
+                std_out_err = stderr.decode("utf-8", 'ignore')  # escape(stderr)
                 logger.warning('Output: rc={0}, stdout/stderr:\n{1}'.format(rc, std_out_err))
         else:
             std_out_err = ''
