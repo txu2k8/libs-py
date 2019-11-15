@@ -17,12 +17,12 @@ from tlib import log
 logger = log.get_logger()
 
 
-class MySQLObj(object):
+class MySQLAPI(object):
     """
     MySQLdb obj
     """
     def __init__(self, host, user, password, port, database, show=True):
-        super(MySQLObj, self).__init__()
+        super(MySQLAPI, self).__init__()
         self.host = host
         self.user = user
         self.password = password
@@ -186,7 +186,7 @@ class MySQLTestCase(unittest.TestCase):
         pass
 
     def test_1(self):
-        mysql_obj = MySQLObj(host='10.25.119.1', user='test',
+        mysql_obj = MySQLAPI(host='10.25.119.1', user='test',
                              password='password', port=3306, database='testdb')
         fetchall_sql = '''SELECT * FROM student'''
 
@@ -227,7 +227,7 @@ class MySQLTestCase(unittest.TestCase):
         # mysql_obj.fetchall(fetchall_sql)
 
     def test_2(self):
-        mysql_obj = MySQLObj(host='10.25.119.1', user='test',
+        mysql_obj = MySQLAPI(host='10.25.119.1', user='test',
                              password='password', port=3306, database='testdb')
         fetchall_sql = '''SELECT * FROM test'''
 

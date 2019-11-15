@@ -33,7 +33,7 @@ class KubernetesApi(object):
     _extensionsv1betaapi = None
 
     def __init__(self, host=None, secret=None, config_file=None,
-                 namespace="test"):
+                 namespace="default"):
         self.host = host  # api server
         self.secret = secret  # api key
         self.config_file = config_file  # config_file full path

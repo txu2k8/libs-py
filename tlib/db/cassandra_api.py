@@ -22,14 +22,14 @@ ssl._create_default_https_context = ssl._create_unverified_context
 logger = log.get_logger()
 
 
-class CassandraObj(object):
+class CassandraAPI(object):
     """docstring for CassandraObj"""
     _session = None
     _cluster = None
 
     def __init__(self, ips, user='cassandra', password='cassandra', port=9042,
                  keyspace=None, wait_for_all_pools=True):
-        super(CassandraObj, self).__init__()
+        super(CassandraAPI, self).__init__()
         self.ips = ips
         self.user = user
         self.password = password
@@ -113,8 +113,8 @@ if __name__ == "__main__":
     # import fire
     # fire.Fire()
     cassandra_ips = ['10.180.119.1']
-    cassandra_obj = CassandraObj(cassandra_ips)
+    cassandra_obj = CassandraAPI(cassandra_ips)
     print(cassandra_obj.run_cql_cmd('select * from vizion.service'))
 
-    cassandra_obj = CassandraObj(cassandra_ips)
+    cassandra_obj = CassandraAPI(cassandra_ips)
     print(cassandra_obj.run_cql_cmd('select * from vizion.volume'))

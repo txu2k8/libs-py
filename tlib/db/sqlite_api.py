@@ -48,10 +48,10 @@ SQLite数据库是一款非常小巧的嵌入式开源数据库软件，也就�
 '''
 
 
-class SQLiteObj(object):
+class SQLiteAPI(object):
 
     def __init__(self, db_path, show=True):
-        super(SQLiteObj, self).__init__()
+        super(SQLiteAPI, self).__init__()
         self.db_path = db_path
         self.show = show
         self.conn = self.connect()
@@ -207,7 +207,7 @@ class SQLiteTestCase(unittest.TestCase):
         pass
 
     def test_1(self):
-        sqlite_obj = SQLiteObj(self.bd_path, show=True)
+        sqlite_obj = SQLiteAPI(self.bd_path, show=True)
         fetchall_sql = '''SELECT * FROM student'''
 
         sqlite_obj.drop_table('student')
@@ -247,7 +247,7 @@ class SQLiteTestCase(unittest.TestCase):
         # sqlite_obj.fetchall(fetchall_sql)
 
     def test_2(self):
-        sqlite_obj = SQLiteObj(self.bd_path, show=True)
+        sqlite_obj = SQLiteAPI(self.bd_path, show=True)
         fetchall_sql = '''SELECT * FROM student'''
         sqlite_obj.fetchall(fetchall_sql)
 
