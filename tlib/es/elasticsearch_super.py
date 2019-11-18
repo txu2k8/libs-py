@@ -150,6 +150,17 @@ class EsSuper(object):
 
         return index_info
 
+    def get_cluster_settings(self):
+        response = self.conn.cluster.get_settings()
+
+        return response
+
+    def put_cluster_settings(self, body):
+        logger.info('PUT Settings:{0}'.format(body))
+        response = self.conn.cluster.put_settings(body=body)
+
+        return response
+
     @property
     def cluster_allocation_explain(self):
         response = self.conn.cluster.allocation_explain()

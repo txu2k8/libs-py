@@ -9,13 +9,14 @@ import os
 import string
 import random
 import time
-from functools import wraps
-from progressbar import ProgressBar, Percentage, Bar, RotatingMarker, ETA
 import hashlib
+from functools import wraps
+from concurrent.futures import ThreadPoolExecutor
+from progressbar import ProgressBar, Percentage, Bar, RotatingMarker, ETA
 
 from tlib import log
 from tlib.retry import retry
-from tlib.bs import ip_to_int, int_to_ip
+from tlib.bs import ip_to_int, int_to_ip, strsize_to_byte
 from tlib.platform.platforms import run_cmd, ssh_cmd
 
 # =============================
@@ -314,6 +315,105 @@ def get_unused_ip(ip_start, wasteful=True):
         else:
             break
     return new_ip
+
+
+def get_current_time():
+    return int(time.time() * 1000)
+
+
+# =============== multi thread / process ===============
+
+def multi_dd_w(file_list, file_min_size=1024, file_max_size=1024):
+    """
+    multi thread dd write
+    :param file_list: file full path name list
+    :param file_min_size:
+    :param file_max_size:
+    :return:
+    """
+
+    f_min_size = strsize_to_byte(file_min_size)
+    f_max_size = strsize_to_byte(file_max_size)
+    block_size_list = ['512', '1k', '4k', '16k', '64k', '512k', '1M']
+
+    bs = random.choice(block_size_list)
+    bs_size = strsize_to_byte(bs)
+    i_path = '/dev/random' if WINDOWS else '/dev/urandom'
+
+    pool = ThreadPoolExecutor(max_workers=10)
+    futures = []
+    for f_path_name in file_list:
+        rand_f_size = random.randint(f_min_size, f_max_size)
+        # logger.debug('FILE SIZE: %s byte' % str(rand_f_size))
+        if rand_f_size < 1024*1024:
+            bs = rand_f_size
+            dd_count = 1
+        else:
+            dd_count = rand_f_size // bs_size
+        futures.append(pool.submit(dd_read_write, i_path, f_path_name, bs, str(dd_count)))
+
+    pool.shutdown()
+    future_result = [future.result() for future in futures]
+    result = False if False in future_result else True
+    return result
+
+
+def multi_xls_w():
+    pass
+    # TODO
+
+
+def multi_file_w(file_list, file_min_size=1024, file_max_size=1024, mode='w+'):
+    """
+    Multi Write files by "with open as f: f.write()"
+    r 只能读
+    r+ 可读可写 不会创建不存在的文件 从顶部开始写 会覆盖之前此位置的内容
+    w+ 可读可写 如果文件存在 则覆盖整个文件不存在则创建
+    w 只能写 覆盖整个文件 不存在则创建
+    a 只能写 从文件底部添加内容 不存在则创建
+    a+ 可读可写 从文件顶部读取内容 从文件底部添加内容 不存在则创建
+    :param file_list:
+    :param file_min_size:
+    :param file_max_size:
+    :param mode:
+    :return:
+    """
+
+    f_min_size = strsize_to_byte(file_min_size)
+    f_max_size = strsize_to_byte(file_max_size)
+
+    pool = ThreadPoolExecutor(max_workers=10)
+    futures = []
+    for f_path_name in file_list:
+        rand_f_size = random.randint(f_min_size, f_max_size)
+        # logger.debug('FILE SIZE: %s byte' % str(rand_f_size))
+        futures.append(pool.submit(create_file, f_path_name, rand_f_size, 128, mode))
+
+    pool.shutdown()
+    future_result = [future.result() for future in futures]
+    result = False if False in future_result else True
+    return result
+
+
+def multi_get_md5(file_list):
+    """
+    get file_list md5
+    :param file_list:
+    :return:
+    """
+
+    pool = ThreadPoolExecutor(max_workers=5)
+    results = pool.map(get_file_md5, file_list)
+    pool.shutdown()
+
+    files_md5 = {}
+    for rtn in results:
+        if not rtn:
+            return False
+        else:
+            files_md5.update(rtn)
+
+    return files_md5
 
 
 if __name__ == "__main__":

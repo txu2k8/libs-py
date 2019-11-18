@@ -113,6 +113,33 @@ def strsize_to_byte(str_size):
     return size_byte
 
 
+def strnum_to_int_list(str_num, rtn_len=2, style=','):
+    """
+    Format a string to number list
+    :param str_num: string_number
+    :param rtn_len: return number list length
+    :param style: string split with style, '-' not support
+    :return: a number list
+    """
+
+    if isinstance(str_num, int):
+        return [str_num]*rtn_len
+    elif isinstance(str_num, str):
+        pass
+    else:
+        str_num = str(str_num)
+
+    if bool(re.search('[^0-9{0}|\-1\-\-9]'.format(style), str_num)):
+        raise Exception('None-INT char in string: {}'.format(str_num))
+
+    str_num_list = str_num.split(style)
+    num_list = [int(n) for n in str_num_list]
+    num_list_len = len(num_list)
+    if rtn_len > num_list_len:
+        num_list += [num_list[-1]] * (rtn_len - num_list_len)
+    return num_list[:rtn_len]
+
+
 if __name__ == '__main__':
     print(binary_system(2542, 7, 12))  # 将7进制的2542转为12进制
     print(gcd(97 * 2, 97 * 3))  # 最大公约数
