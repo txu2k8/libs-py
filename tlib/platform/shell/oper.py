@@ -33,7 +33,7 @@ from tlib import log
 
 # linux only import
 if platform.system() == 'Linux':
-    from tlib.res import linux
+    from tlib.platform import linux
     __all__ = [
         'rm', 'rmrf', 'kill',
         'is_process_used_port', 'is_port_used', 'is_proc_exist',

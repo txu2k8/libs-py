@@ -22,7 +22,6 @@ from email.mime import text
 
 from tlib import log
 from tlib import decorators
-from tlib.platform import shell
 
 logger = log.get_logger()
 
@@ -330,6 +329,8 @@ def mutt_sendmail(m_to, subject, body, attach, content_is_html=False):
     :return:
         return True on success, False otherwise
     """
+    from tlib.platform import shell
+
     decorators.needlinux(mutt_sendmail)
     shellobj = shell.ShellExec()
     temp_cwd = os.getcwd()
