@@ -10,11 +10,10 @@ import uuid
 import string
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import unittest
 
 from tlib.es.elasticsearch_super import EsSuper
 from tlib.es.es_doc_setting import TEST_META_INDEX_SETTING
-from tlib import log, const
+from tlib import log
 from tlib.retry import retry
 from tlib.utils import util
 
@@ -22,19 +21,6 @@ from tlib.utils import util
 # --- Global
 # =============================
 logger = log.get_logger()
-args = const.get_value('args')
-
-# Elasticsearch Stress Mandatory Parameters
-ES_ADDRESS = args.es_address
-ES_USERNAME = args.es_user
-ES_PASSWORD = args.es_pwd
-ES_PORT = args.es_port
-
-# Elasticsearch Stress/Index Optional Parameters
-NUMBER_OF_INDICES = args.indices
-NUMBER_OF_DOCUMENTS = args.documents
-INDEX_NAME = args.index_name
-BULK_SIZE = args.bulk_size
 
 
 class ElasticsearchIndex(EsSuper):
@@ -285,24 +271,3 @@ class ElasticsearchSearch(EsSuper):
         result = False if False in future_result else True
         return result
 
-
-class ElasticsearchIndexTestCase(unittest.TestCase):
-    """Elasticsearch Index Test Cases"""
-
-    def setUp(self) -> None:
-        pass
-
-    def tearDown(self) -> None:
-        pass
-
-    def test_index(self):
-        """Elasticsearch index Test: multi-thread index"""
-        logger.info(self.test_index.__doc__)
-        es_index_obj = ElasticsearchIndex(
-            ES_ADDRESS, ES_USERNAME, ES_PASSWORD, ES_PORT, NUMBER_OF_INDICES,
-            NUMBER_OF_DOCUMENTS, BULK_SIZE, INDEX_NAME)
-        indices_name = es_index_obj.multi_index_random()
-        for index_name in indices_name:
-            es_index_obj.is_index_green(index_name)
-        logger.info("Sleep 600s after the iteration es index complete...")
-        util.sleep_progressbar(600)
