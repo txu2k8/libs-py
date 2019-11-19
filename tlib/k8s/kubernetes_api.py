@@ -556,10 +556,7 @@ class KubernetesApi(object):
     @property
     def pod_name_list(self):
         all_pod_name_list = []
-        all_info = self.corev1api.list_namespaced_pod(
-            namespace=self.namespace
-        )
-
+        all_info = self.corev1api.list_namespaced_pod(namespace=self.namespace)
         for pod_info in all_info.items:
             pod_name = pod_info.metadata.name
             all_pod_name_list.append(pod_name)
@@ -741,6 +738,88 @@ class KubernetesApi(object):
             raise Exception('Pod {0} not down!'.format(pod_name))
 
         return True
+
+    @retry(tries=120, delay=15)
+    def wait_pod_ready(self, pod_name=None, pod_name_startswith=None,
+                       origin_pod_name_list=None):
+        """
+        wait for pod ready: Running
+        :param pod_name:
+        :param pod_name_startswith:
+        :param origin_pod_name_list:
+        :return:
+        """
+        if origin_pod_name_list is None:
+            origin_pod_name_list = []
+        assert pod_name or pod_name_startswith
+
+        all_info = self.corev1api.list_namespaced_pod(namespace=self.namespace)
+        for p_info in all_info.items:
+            p_name = p_info.metadata.name
+            if pod_name:
+                if p_name != pod_name:
+                    continue
+            elif pod_name_startswith:
+                if not p_name.startswith(pod_name_startswith):
+                    continue
+            else:
+                pass
+            if origin_pod_name_list and p_name in origin_pod_name_list:
+                continue
+
+            host_ip = p_info['host_ip']
+            if p_info['status'] != 'Running' or \
+                    not p_info['containers'][0]['ready']:
+                logger.warning('Wait pod {0} on {1} start.'.format(p_name, host_ip))
+                raise Exception('Pod {0} is not ready'.format(p_name))
+            else:
+                logger.info('Pod {0} on {1} is ready.'.format(p_name, host_ip))
+                return True
+        else:
+            if pod_name:
+                logger.error('Not found the pod name {}!'.format(pod_name))
+            else:
+                logger.error('Not found the pod name start with {}!'.format(pod_name_startswith))
+            return False
+
+    def wait_pod_ready_by_startswith(self, pod_startswith):
+        return self.wait_pod_ready(None, pod_startswith, None)
+
+    def wait_new_pod_ready_by_startswith(self, pod_startswith, origin_pod_name_list):
+        return self.wait_pod_ready(None, pod_startswith, origin_pod_name_list)
+
+    @retry(tries=30, delay=20)
+    def wait_pod_terminated(self, pod_name=None, pod_name_startswith=None):
+        """
+        wait for pod terminated
+        :param pod_name:
+        :param pod_name_startswith:
+        :return:
+        """
+
+        assert pod_name or pod_name_startswith
+        all_info = self.corev1api.list_namespaced_pod(namespace=self.namespace)
+        for p_info in all_info.items:
+            p_name = p_info.metadata.name
+            if pod_name:
+                if p_name == pod_name:
+                    logger.warning('Wait pod {0} terminating!'.format(p_name))
+                    raise Exception('Pod {0} is not terminated'.format(p_name))
+            elif pod_name_startswith:
+                if p_name.startswith(pod_name_startswith):
+                    logger.warning('Wait pod {0}* terminating!'.format(pod_name_startswith))
+                    raise Exception('Pod {0} is not terminated'.format(p_name))
+            else:
+                raise Exception('Please specify what pods to wait terminated!')
+        else:
+            if pod_name:
+                logger.info('Pod {0} terminate done!'.format(pod_name))
+            else:
+                logger.info('Pod {0}* terminate done!'.format(pod_name_startswith))
+        return True
+
+    def wait_pod_terminated_by_startswith(self, pod_startswith):
+        return self.wait_pod_terminated(None, pod_startswith)
 
     # ============ service(svc) ============
     @property
