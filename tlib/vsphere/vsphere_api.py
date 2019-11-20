@@ -32,6 +32,7 @@ from pyVmomi import vmodl
 from tlib import log
 from tlib.retry import retry
 from tlib.utils import util
+from tlib.ds import sort_dict
 
 # =============================
 # --- Global
@@ -336,6 +337,9 @@ class VsphereApi(object):
                     return cluster.name
         logger.warning("Could not find vm <%s> in all cluster!" % vm.name)
         return None
+
+    def get_vm_location_esxi(self, vm):
+        return vm.summary.runtime.host.name
 
     @staticmethod
     def get_vm_name(vm):
@@ -746,6 +750,63 @@ class VsphereApi(object):
         return True
 
     # ================== Set VM ==================
+    def add_disk(self, vm, ds_type, disk_size):
+        vm_name = vm.name
+        logger.info("Add disk to {vm} start.".format(vm=vm_name))
+        vm_spec = vim.vm.ConfigSpec()
+        esx_host = self.get_vm_location_esxi(vm)
+        ds = self.get_ds_filter(esx_host, ds_type, disk_size*1024*1024*1024)[0]
+
+        unit_number = 0
+        pre_controller_key = 0
+        for dev in vm.config.hardware.device:
+            if isinstance(dev, vim.vm.device.VirtualDisk):
+                unit_number = int(dev.unitNumber) + 1
+
+                # unit_number 7 reserved for scsi controller
+                if unit_number == 7:
+                    unit_number += 1
+                if unit_number >= 16:
+                    logger.error('Not support more than 15 disks.')
+
+            if isinstance(dev, vim.vm.device.VirtualSCSIController):
+                # add new disk to SCSIController 0
+                if pre_controller_key == 0:
+                    pre_controller_key = dev.key
+                if dev.key > pre_controller_key:
+                    continue
+                controller = dev
+
+        disk_path = '[{ds_name}] {vmname}/{vmname}_{lun_id}.vmdk'.format(
+            ds_name=ds.name, vmname=vm_name, lun_id=unit_number)
+
+        dev_changes = []
+        disk_spec = vim.vm.device.VirtualDeviceSpec()
+        disk_spec.fileOperation = "create"
+        disk_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
+        disk_spec.device = vim.vm.device.VirtualDisk()
+        disk_spec.device.backing = vim.vm.device.VirtualDisk.FlatVer2BackingInfo()
+        disk_spec.device.backing.diskMode = 'persistent'
+        disk_spec.device.backing.datastore = ds
+        disk_spec.device.backing.fileName = disk_path
+        disk_spec.device.unitNumber = unit_number
+        disk_spec.device.capacityInKB = int(disk_size) * 1024 * 1024
+        disk_spec.device.controllerKey = controller.key
+        dev_changes.append(disk_spec)
+        vm_spec.deviceChange = dev_changes
+        task = vm.ReconfigVM_Task(spec=vm_spec)
+        try:
+            task_rtn = WaitForTask(task)
+        except Exception as e:
+            raise e
+        else:
+            if task_rtn == vim.TaskInfo.State.success:
+                logger.info('Add disk {ds} to {vm_name} done.'.format(ds=ds.name, vm_name=vm_name))
+                return True
+            else:
+                raise Exception(
+                    'Add disk to {vm_name} fail: {rtn}'.format(vm_name=self.get_vm_name(vm), rtn=task_rtn))
+
     def add_nic(self, vm, network_name):
         """
         add nic to vm
@@ -1416,18 +1477,23 @@ class VsphereApi(object):
             raise Exception('Failed to find any free datastores on %s' % dc.name)
         return largest
 
-    def get_ds_filter(self, esxi_host, ds_type, min_size=100*1024*1024*1024):
-        ds_list = []
+    def get_ds_filter(self, esxi_host, ds_types=None,
+                      min_size=100*1024*1024*1024):
+        if ds_types is None:
+            ds_types = ['SSD', 'HDD']
+
+        host_ds_list = []
         view_obj = self.content.viewManager.CreateContainerView(
             self.content.rootFolder, [vim.Datastore], True)
         all_ds_list = view_obj.view
         for ds in all_ds_list:
             for host in ds.host:
                 if host.key == self.get_esxi(esxi_host):
-                    ds_list.append(ds)
+                    host_ds_list.append(ds)
 
+        match_ds_info = {}
         match_ds_list = []
-        for ds in ds_list:
+        for ds in host_ds_list:
             if not ds.summary.accessible:
                 logger.debug('{ds} is not accessible, ignore.'.format(ds=ds.name))
                 continue
@@ -1442,19 +1508,22 @@ class VsphereApi(object):
                 ssd_enable = False
 
             if ssd_enable:
-                if ds_type != 'SSD':
+                if 'SSD' not in ds_types:
                     logger.warning('{ds} is SSD, ignore.'.format(ds=ds.name))
                     continue
             else:
-                if ds_type == 'SSD':
+                if 'HDD' not in ds_types:
                     logger.warning('{ds} is not SSD, ignore.'.format(ds=ds.name))
                     continue
             try:
                 free_space = ds.summary.freeSpace
                 if free_space >= min_size:
-                    match_ds_list.append(ds)
+                    match_ds_info[ds] = free_space
             except Exception as e:
                 logger.warning('Failed get free ds: {0}. Ignore'.format(e))
+        sort_ds_info = sort_dict(match_ds_info, base='value', reverse=True)
+        match_ds_list = [ds for ds, free_size in sort_ds_info]
+
         return match_ds_list
 
     # ================== Deploy ==================

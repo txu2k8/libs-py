@@ -435,7 +435,8 @@ def run_cmd(cmd_spec, expected_rc=0, output=True, tries=1, delay=3, timeout=7200
     return rc, output
 
 
-def paramiko_ssh_cmd(ip, username, password, cmd_spec, key_file=None, timeout=7200, get_pty=False, docker_image=None):
+def paramiko_ssh_cmd(ip, username, password, cmd_spec, key_file=None,
+                     timeout=7200, get_pty=False, docker_image=None):
     """
     ssh to <ip> and then run commands --paramiko
     :param ip:
@@ -480,8 +481,8 @@ def paramiko_ssh_cmd(ip, username, password, cmd_spec, key_file=None, timeout=72
         raise Exception('Failed to run command: {0}\n{1}'.format(cmd_spec, e))
 
 
-def ssh_cmd(ip, username, password, cmd_spec, expected_rc=0, key_file=None, timeout=7200, get_pty=False,
-            docker_image=None, tries=3, delay=3):
+def ssh_cmd(ip, username, password, cmd_spec, expected_rc=0, key_file=None,
+            timeout=7200, get_pty=False, docker_image=None, tries=3, delay=3):
     """
     ssh and run cmd
     :param ip:
