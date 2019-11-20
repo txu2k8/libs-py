@@ -6,18 +6,28 @@
 
 """utils"""
 import os
+import sys
 import string
 import random
 import time
 import hashlib
+import socket
+import subprocess
+import scp
+import inspect
+import paramiko
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor
 from progressbar import ProgressBar, Percentage, Bar, RotatingMarker, ETA
+try:
+    import pexpect
+except ImportError:
+    pass
 
 from tlib import log
-from tlib.retry import retry
+from tlib.retry import retry, retry_call
+# from tlib.ds import escape
 from tlib.bs import ip_to_int, int_to_ip, strsize_to_byte
-from tlib.platform.platforms import run_cmd, ssh_cmd
 
 # =============================
 # --- Global Value
@@ -26,8 +36,10 @@ logger = log.get_logger()
 # --- OS constants
 POSIX = os.name == "posix"
 WINDOWS = os.name == "nt"
-DD_BINARY = os.path.join(os.getcwd(), 'bin\dd\dd.exe') if WINDOWS else 'dd'
-MD5SUM_BINARY = os.path.join(os.getcwd(), 'bin\git\md5sum.exe') if WINDOWS else 'md5sum'
+PY2 = sys.version_info[0] == 2
+ENCODING = None if PY2 else 'utf-8'
+DD_BINARY = os.path.join(os.getcwd(), r'bin\dd\dd.exe') if WINDOWS else 'dd'
+MD5SUM_BINARY = os.path.join(os.getcwd(), r'bin\git\md5sum.exe') if WINDOWS else 'md5sum'
 
 
 def print_for_call(func):
@@ -98,7 +110,7 @@ def create_file(path_name, total_size='4k', line_size=128, mode='w+'):
         except OSError as e:
             raise Exception(e)
 
-    size = strsize_to_size(total_size)
+    size = strsize_to_byte(total_size)
     line_count = size // line_size
     unaligned_size = size % line_size
 
@@ -235,37 +247,11 @@ def mkdir_path_if_not_exist(local_path):
             raise Exception(e)
 
 
-def ip_to_int(ip):
-    """
-    convert ip(ipv4) address to a int num
-    :param ip:
-    :return: int num
-    """
-
-    lp = [int(x) for x in ip.split('.')]
-    return lp[0] << 24 | lp[1] << 16 | lp[2] << 8 | lp[3]
-
-
-def int_to_ip(num):
-    """
-    convert int num to ip(ipv4) address
-    :param num:
-    :return:
-    """
-
-    ip = ['', '', '', '']
-    ip[3] = (num & 0xff)
-    ip[2] = (num & 0xff00) >> 8
-    ip[1] = (num & 0xff0000) >> 16
-    ip[0] = (num & 0xff000000) >> 24
-    return '%s.%s.%s.%s' % (ip[0], ip[1], ip[2], ip[3])
-
-
-def is_ping_ok(ip, retry=30):
+def is_ping_ok(ip, tries=30):
     """
     Check if the machine can ping successful
     :param ip:
-    :param retry:
+    :param tries:
     :return:(bool) True / False
     """
 
@@ -276,7 +262,7 @@ def is_ping_ok(ip, retry=30):
     else:
         cmd = "ping %s" % ip
 
-    for x in range(retry):
+    for x in range(tries):
         rc, output = run_cmd(cmd, expected_rc='ignore')
         if "ttl=" in output.lower():
             logger.info(ip + ' is Reachable')
@@ -309,7 +295,7 @@ def get_unused_ip(ip_start, wasteful=True):
         ip_start_num += 1
     while True:
         new_ip = int_to_ip(ip_start_num)
-        if is_ping_ok(new_ip, retry=1):
+        if is_ping_ok(new_ip, tries=1):
             ip_start_num += 1
             continue
         else:
@@ -319,6 +305,419 @@ def get_unused_ip(ip_start, wasteful=True):
 
 def get_current_time():
     return int(time.time() * 1000)
+
+
+def get_local_ip():
+    """
+    Get the local ip address --linux/windows
+    :return:local_ip
+    """
+
+    if WINDOWS:
+        local_ip = socket.gethostbyname(socket.gethostname())
+    else:
+        local_ip = os.popen("ifconfig | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{print $1}' | "
+                            "head -1").read().strip('\n')
+    return local_ip
+
+
+def get_local_hostname():
+    """
+    Get the local ip address --linux/windows
+    :return:local_hostname
+    """
+
+    local_hostname = socket.gethostname()
+    return local_hostname
+
+
+def get_remote_ip(ip, username, password, ifname='eth0'):
+    """
+    Get the remote ip address --linux
+    :param ip:
+    :param username:
+    :param password:
+    :param ifname:
+    :return: ip_list
+    """
+    cmd = "LANG=C ifconfig %s| grep 'inet addr' | grep -v '127.0.0.1' |awk -F ':' '{print $2}' | awk '{print $1}'" % ifname
+    rc, output = ssh_cmd(ip, username, password, cmd)
+    ip_list = output.strip('\n').split('\n')
+    return ip_list
+
+
+def get_remote_hostname(ip, username, password):
+    """
+    Get the hostname --linux
+    :param ip:
+    :param username:
+    :param password:
+    :return:hostname
+    """
+
+    logger.info('Call get_remote_hostname for <%s>...' % ip)
+    cmd = "hostname"
+    try:
+        rc, output = ssh_cmd(ip, username, password, cmd)
+        hostname = output.strip('\n')
+    except Exception as e:
+        logger.error(e)
+        return False
+    else:
+        return hostname
+
+
+def subprocess_popen_cmd(cmd_spec, output=True, timeout=7200):
+    """
+    Executes command and Returns (rc, output) tuple
+    :param cmd_spec: Command to be executed
+    :param output: A flag for collecting STDOUT and STDERR of command execution
+    :param timeout
+    :return:
+    """
+
+    logger.info('Execute: {cmds}'.format(cmds=cmd_spec))
+    try:
+        p = subprocess.Popen(cmd_spec, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        t_beginning = time.time()
+
+        while True:
+            if p.poll() is not None:
+                break
+            seconds_passed = time.time() - t_beginning
+            if timeout and seconds_passed > timeout:
+                p.terminate()
+                raise TimeoutError('TimeOutError: {0} seconds'.format(timeout))
+            time.sleep(0.1)
+
+        rc = p.returncode
+        if output:
+            # (stdout, stderr) = p.communicate()
+            stdout, stderr = p.stdout.read(), p.stderr.read()
+            if rc == 0:
+                std_out_err = stdout.decode("utf-8", 'ignore')  # escape(stdout)
+            else:
+                std_out_err = stderr.decode("utf-8", 'ignore')  # escape(stderr)
+                logger.warning('Output: rc={0}, stdout/stderr:\n{1}'.format(rc, std_out_err))
+        else:
+            std_out_err = ''
+        # p.stdout.close()
+        # p.stderr.close()
+        # p.kill()
+        return rc, std_out_err
+    except Exception as e:
+        raise Exception('Failed to execute: {0}\n{1}'.format(cmd_spec, e))
+
+
+def run_cmd(cmd_spec, expected_rc=0, output=True, tries=1, delay=3, timeout=7200):
+    """
+    A generic method for running commands which will raise exception if return code of exeuction is not as expected.
+    :param cmd_spec:A list of words constituting a command line
+    :param expected_rc:An expected value of return code after command execution, defaults to 0, If expected. RC.upper()
+    is 'IGNORE' then exception will not be raised.
+    :param output:
+    :param tries: retry times
+    :param delay: retry delay
+    :param timeout
+    :return:
+    """
+
+    method_name = inspect.stack()[1][3]    # Get name of the calling method, returns <methodName>'
+    rc, output = retry_call(subprocess_popen_cmd, fkwargs={'cmd_spec': cmd_spec, 'output': output, 'timeout': timeout},
+                            tries=tries, delay=delay, logger=logger)
+
+    if isinstance(expected_rc, str) and expected_rc.upper() == 'IGNORE':
+        return rc, output
+
+    if rc != expected_rc:
+        raise Exception('%s(): Failed command: %s\nMismatched RC: Received [%d], Expected [%d]\nError: %s' % (
+            method_name, cmd_spec, rc, expected_rc, output))
+    return rc, output
+
+
+def paramiko_ssh_cmd(ip, username, password, cmd_spec, key_file=None, timeout=7200, get_pty=False, docker_image=None):
+    """
+    ssh to <ip> and then run commands --paramiko
+    :param ip:
+    :param username:
+    :param password:
+    :param cmd_spec:
+    :param key_file:
+    :param timeout:
+    :param get_pty:
+    :param docker_image:
+    :return:
+    """
+
+    sudo = False if username in ['root', 'support'] else True
+    # run_cmd('ssh-keygen -f "/root/.ssh/known_hosts" -R "{0}"'.format(ip))
+    ssh = paramiko.SSHClient()
+    # ssh.load_system_host_keys()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    if docker_image:
+        cmd_spec = "docker run -i --rm --network host -v /dev:/dev -v /etc:/etc --privileged {image} bash " \
+                   "-c '{cmd}'".format(image=docker_image, cmd=cmd_spec)
+    logger.info('Execute: ssh {0}@{1} {2}'.format(username, ip, cmd_spec))
+    try:
+        if key_file is not None:
+            pkey = paramiko.RSAKey.from_private_key_file(key_file)
+            ssh.connect(ip, 22, username, password, timeout=timeout, pkey=pkey)
+        else:
+            ssh.connect(ip, 22, username, password, timeout=timeout)
+        if sudo:
+            stdin, stdout, stderr = ssh.exec_command('sudo {0}'.format(cmd_spec), get_pty=True, timeout=timeout)
+            stdin.write(password + '\n')
+            stdin.flush()
+        else:
+            stdin, stdout, stderr = ssh.exec_command(cmd_spec, get_pty=get_pty, timeout=360000)
+            stdin.write('\n')
+            stdin.flush()
+        std_out, std_err = stdout.read(), stderr.read()  # escape(stdout.read()), escape(stderr.read())
+        ssh.close()
+        return std_out, std_err
+    except Exception as e:
+        raise Exception('Failed to run command: {0}\n{1}'.format(cmd_spec, e))
+
+
+def ssh_cmd(ip, username, password, cmd_spec, expected_rc=0, key_file=None, timeout=7200, get_pty=False,
+            docker_image=None, tries=3, delay=3):
+    """
+    ssh and run cmd
+    :param ip:
+    :param username:
+    :param password:
+    :param cmd_spec:
+    :param expected_rc:
+    :param key_file:
+    :param timeout:
+    :param get_pty:
+    :param docker_image:
+    :param tries:
+    :param delay:
+    :return:
+    """
+    method_name = inspect.stack()[1][3]  # Get name of the calling method, returns <methodName>'
+    stdout, stderr = retry_call(paramiko_ssh_cmd,
+                                fkwargs={'ip': ip,
+                                         'username': username,
+                                         'password': password,
+                                         'cmd_spec': cmd_spec,
+                                         'key_file': key_file,
+                                         'timeout': timeout,
+                                         'get_pty': get_pty,
+                                         'docker_image': docker_image}, tries=tries, delay=delay, logger=logger)
+    rc = -1 if stderr else 0
+    output = stdout + stderr if stderr else stdout
+    if isinstance(expected_rc, str) and expected_rc.upper() == 'IGNORE':
+        return rc, output
+
+    if rc != expected_rc:
+        raise Exception('%s(): Failed command: %s\nMismatched RC: Received [%d], Expected [%d]\nError: %s' % (
+            method_name, cmd_spec, rc, expected_rc, output))
+    return rc, output
+
+
+@retry(tries=2, delay=1)
+def remote_sftp_put(host_ip, remote_path, local_path, username, password):
+    """
+    scp put --paramiko
+    :param host_ip:
+    :param remote_path:
+    :param local_path:
+    :param username:
+    :param password:
+    :return:
+    """
+    try:
+        t = paramiko.Transport((host_ip, 22))
+        t.connect(username=username, password=password)
+        sftp = paramiko.SFTPClient.from_transport(t)
+        sftp.put(local_path, remote_path)
+        t.close()
+        return True
+    except Exception as e:
+        raise e
+
+
+@retry(tries=2, delay=1)
+def remote_sftp_get(host_ip, remote_path, local_path, username, password):
+    """
+    scp get --paramiko
+    :param host_ip:
+    :param remote_path:
+    :param local_path:
+    :param username:
+    :param password:
+    :return:
+    """
+    try:
+        t = paramiko.Transport((host_ip, 22))
+        t.connect(username=username, password=password)
+        sftp = paramiko.SFTPClient.from_transport(t)
+        sftp.get(remote_path, local_path)
+        t.close()
+        return True
+    except Exception as e:
+        raise e
+
+
+@retry(tries=2, delay=1)
+def remote_scp_put(ip, local_path, remote_path, username, password, key_file=None, timeout=36000):
+    """
+    scp put --paramiko, scp
+    :param ip:
+    :param local_path:
+    :param remote_path:
+    :param username:
+    :param password:
+    :param key_file:
+    :param timeout:
+    :return:
+    """
+
+    logger.info('scp %s %s@%s:%s' % (local_path, username, ip, remote_path))
+    ssh = paramiko.SSHClient()
+    # ssh.load_system_host_keys()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    try:
+        if key_file is not None:
+            pkey = paramiko.RSAKey.from_private_key_file(key_file)
+            ssh.connect(ip, 22, username, password, timeout=timeout, pkey=pkey)
+        else:
+            ssh.connect(ip, 22, username, password, timeout=timeout)
+        obj_scp = scp.SCPClient(ssh.get_transport())
+        obj_scp.put(local_path, remote_path)
+        ssh.close()
+        return True
+    except Exception as e:
+        raise e
+
+
+@retry(tries=2, delay=1)
+def remote_scp_get(ip, local_path, remote_path, username, password, key_file=None, timeout=36000):
+    """
+    scp get --paramiko, scp
+    :param ip:
+    :param local_path:
+    :param remote_path:
+    :param username:
+    :param password:
+    :param key_file:
+    :param timeout:
+    :return:
+    """
+
+    logger.debug('scp %s@%s:%s %s' % (username, ip, remote_path, local_path))
+
+    ssh = paramiko.SSHClient()
+    ssh.load_system_host_keys()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    try:
+        if key_file is not None:
+            pkey = paramiko.RSAKey.from_private_key_file(key_file)
+            ssh.connect(ip, 22, username, password, timeout=timeout, pkey=pkey)
+        else:
+            ssh.connect(ip, 22, username, password, timeout=timeout)
+        obj_scp = scp.SCPClient(ssh.get_transport())
+        obj_scp.get(remote_path, local_path)
+        ssh.close()
+        return True
+    except Exception as e:
+        raise e
+
+
+@retry(tries=3, delay=3)
+def pexpect_ssh_login(ip, username, password=None, key_file=None, timeout=720):
+    """
+    This runs a command on the remote host. This could also be done with the
+    pxssh class, but this demonstrates what that class does at a simpler level.
+    This returns a pexpect.spawn object. This handles the case when you try to
+    connect to a new host and ssh asks you if you want to accept the public key
+    fingerprint and continue connecting.
+    :param ip:
+    :param username:
+    :param password:
+    :param key_file:
+    :param timeout:
+    :return:
+    """
+
+    prompt = ['# ', '>>> ', '> ', r'\$ ']
+    login_expect = [
+        'Are you sure you want to continue connecting', '[P|p]assword: '
+    ]
+    login_expect.extend(prompt)
+
+    try:
+        if key_file:
+            login_cmd = 'ssh -i {key} {user}@{host}'.format(
+                key=key_file, user=username, host=ip)
+        else:
+            login_cmd = 'ssh {user}@{host}'.format(user=username, host=ip)
+
+        logger.info(login_cmd)
+        child = pexpect.spawn(login_cmd, timeout=timeout, encoding=ENCODING)
+        # child.logfile = sys.stdout
+        ret = child.expect(login_expect)
+        if ret == 0:
+            child.sendline('yes')
+            ret = child.expect(login_expect)
+        if ret == 1:
+            child.sendline(password)
+            ret = child.expect(login_expect)
+        if ret > 1:
+            print('SSH Login success ...')
+            return child
+    except pexpect.EOF as e:
+        raise Exception('[-] Error Connecting, {0}'.format(e))
+    except pexpect.TIMEOUT as e:
+        raise Exception('[-] TimeOut Connecting, {0}'.format(e))
+
+
+def centos_enable_root(ip, username='centos', password=None, key_file=None,
+                       root_pwd='password'):
+    """
+    enable centos root user and set root password
+    :param ip:
+    :param username:
+    :param password:
+    :param key_file:
+    :param root_pwd:
+    :return:
+    """
+
+    passwd_root = 'sudo passwd root'
+    cmd = 'sed -i ' \
+          's/"PasswordAuthentication no"/"PasswordAuthentication yes"/g ' \
+          '/etc/ssh/sshd_config;service sshd restart'
+    child = pexpect_ssh_login(ip, username, password, key_file)
+
+    try:
+        logger.info(passwd_root)
+        logger.info(root_pwd)
+        child.sendline(passwd_root)
+        child.expect('New password:')
+        child.sendline(root_pwd)
+        child.expect('Retype new password:')
+        child.sendline(root_pwd)
+        child.expect('all authentication tokens updated successfully.')
+        child.sendline('su root')
+        child.expect('Password:')
+        child.sendline(root_pwd)
+        child.expect('root@.*#')
+        logger.info(cmd)
+        child.sendline(cmd)
+        child.expect('Redirecting to /bin/systemctl restart sshd.service')
+        child.close(force=True)
+    except pexpect.EOF as e:
+        raise Exception('[-] Error: {0}'.format(e))
+    except pexpect.TIMEOUT as e:
+        raise Exception('[-] TimeOut: {0}'.format(e))
+
+    return True
 
 
 # =============== multi thread / process ===============
@@ -418,5 +817,3 @@ def multi_get_md5(file_list):
 
 if __name__ == "__main__":
     pass
-    rc, output = ssh_cmd('10.25.119.1', 'root', 'password', 'df -h')
-    print(output.split(b'\n'))

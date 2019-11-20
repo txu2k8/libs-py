@@ -40,7 +40,8 @@ class SSHManager(object):
 
     def __del__(self):
         # logger.debug('Enter SSHObj.__del__()')
-        # self.ssh.close()
+        if self._ssh:
+            self._ssh.close()
         del self._ssh
 
     @property

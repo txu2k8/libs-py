@@ -21,7 +21,7 @@ import collections
 from functools import wraps
 import unittest
 
-from tlib import decorators, err
+from tlib import decorators, exceptions
 
 
 __all__ = [
@@ -678,7 +678,7 @@ def process_iter():
         try:
             check_process = Process(pid)
             res = check_process.get_process_name()
-        except err.NoSuchProcess:
+        except exceptions.NoSuchProcess:
             pass
         else:
             yield check_process
@@ -698,7 +698,7 @@ class Process(object):
         self._process_name = None
         self._create_time = None
         if not os.path.lexists("/proc/%s/exe" % self._pid):
-            raise err.NoSuchProcess(self._pid, self._process_name)
+            raise exceptions.NoSuchProcess(self._pid, self._process_name)
         else:
             self._create_time = self.create_time()
 
@@ -755,7 +755,7 @@ class Process(object):
             for p in process_iter():
                 try:
                     table[p.get_process_ppid()].append(p)
-                except (err.NoSuchProcess):
+                except (exceptions.NoSuchProcess):
                     pass
             # At this point we have a mapping table where table[self.pid]
             # are the current process' children.
@@ -768,7 +768,7 @@ class Process(object):
                         # if child happens to be older than its parent
                         # (self) it means child's PID has been reused
                         intime = self.create_time() <= child.create_time()
-                    except (err.NoSuchProcess):
+                    except (exceptions.NoSuchProcess):
                         pass
                     else:
                         if intime:
