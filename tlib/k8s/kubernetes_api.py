@@ -29,6 +29,7 @@ urllib3.disable_warnings()
 class KubernetesApi(object):
     is_connected = None
     _corev1api = None
+    _appsv1api = None
     _appsv1betaapi = None
     _extensionsv1betaapi = None
 
@@ -65,11 +66,19 @@ class KubernetesApi(object):
         return self._corev1api
 
     @property
+    def appsv1api(self):
+        if self._appsv1api is None:
+            if self.is_connected is None:
+                self.connect()
+            self._appsv1api = client.AppsV1Api()
+        return self._appsv1api
+
+    @property
     def appsv1betaapi(self):
         if self._appsv1betaapi is None:
             if self.is_connected is None:
                 self.connect()
-            self._appsv1betaapi = client.AppsV1beta1Api()
+            self._appsv1betaapi = client.AppsV1Api()  # AppsV1beta1Api
         return self._appsv1betaapi
 
     @property
@@ -77,7 +86,7 @@ class KubernetesApi(object):
         if self._extensionsv1betaapi is None:
             if self.is_connected is None:
                 self.connect()
-            self._extensionsv1betaapi = client.ExtensionsV1beta1Api()
+            self._extensionsv1betaapi = client.AppsV1Api()  # ExtensionsV1beta1Api
         return self._extensionsv1betaapi
 
     def run_cmd(self, pod_name, cmd, container=None, timeout=360, run_async=False, stdout=True):
