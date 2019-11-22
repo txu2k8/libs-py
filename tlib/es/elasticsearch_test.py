@@ -6,7 +6,8 @@
 
 import unittest
 
-from tlib import log, const
+from tlib.log import log
+from tlib import const
 from tlib.utils import util
 from tlib.es.elasticsearch_index import ElasticsearchIndex
 from tlib.es.elasticsearch_stress import ElasticsearchStress, ElasticsearchObj

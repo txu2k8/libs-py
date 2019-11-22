@@ -20,6 +20,7 @@ from tlib.utils import util
 # --- Global
 # =============================
 logger = log.get_logger()
+DOCKER_ARGS = '--dns=10.233.0.10 --dns-search=svc.cluster.local'
 
 
 class SSHManager(object):
@@ -54,8 +55,7 @@ class SSHManager(object):
     @retry(tries=10, delay=3, jitter=1)
     def connect(self):
         logger.info('SSH Connect to {0}@{1}(pwd:{2}, key_file:{3})'.format(
-            self.username, self.ip, self.password,
-            self.key_file))
+            self.username, self.ip, self.password, self.key_file))
         compile_ip = re.compile(r'^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$')
         if not compile_ip.match(self.ip):
             logger.error('Error IP address!')
@@ -84,13 +84,14 @@ class SSHManager(object):
         return self.ssh.get_transport().is_active()
 
     def paramiko_ssh_cmd(self, cmd_spec, timeout=7200, get_pty=False,
-                         docker_image=None):
+                         docker_image=None, docker_args=''):
         """
         ssh to <ip> and then run commands --paramiko
         :param cmd_spec:
         :param timeout:
         :param get_pty:
         :param docker_image:
+        :param docker_args:
         :return:
         """
 
@@ -98,9 +99,9 @@ class SSHManager(object):
         # sudo = False if 'kubectl' in cmd_spec else sudo
 
         if docker_image:
-            cmd_spec = "docker run -i --rm --network host " \
-                       "-v /dev:/dev -v /etc:/etc " \
-                       "--privileged {image} bash -c '{cmd}'".format(image=docker_image, cmd=cmd_spec)
+            cmd_spec = "docker run -i --rm --network host {0} " \
+                       "-v /dev:/dev -v /etc:/etc --privileged {1} bash " \
+                       "-c '{2}'".format(docker_args, docker_image, cmd_spec)
         elif sudo:
             cmd_spec = 'sudo {cmd}'.format(cmd=cmd_spec)
 
@@ -126,7 +127,7 @@ class SSHManager(object):
             raise Exception('Failed to run: {0}\n{1}'.format(cmd_spec, e))
 
     def ssh_cmd(self, cmd_spec, expected_rc=0, timeout=7200, get_pty=False,
-                docker_image=None, tries=3, delay=3):
+                docker_image=None, docker_args=DOCKER_ARGS, tries=3, delay=3):
         """
         ssh and run cmd
         """
@@ -137,7 +138,8 @@ class SSHManager(object):
                                     fkwargs={'cmd_spec': cmd_spec,
                                              'timeout': timeout,
                                              'get_pty': get_pty,
-                                             'docker_image': docker_image},
+                                             'docker_image': docker_image,
+                                             'docker_args': docker_args},
                                     tries=tries, delay=delay, logger=logger)
         rc = -1 if stderr else 0
         output = stdout + stderr if stderr else stdout
@@ -147,7 +149,7 @@ class SSHManager(object):
         if rc != expected_rc:
             raise Exception('%s(): Failed command: %s\nMismatched '
                             'RC: Received [%d], Expected [%d]\nError: %s' % (
-                    method_name, cmd_spec, rc, expected_rc, output))
+                method_name, cmd_spec, rc, expected_rc, output))
         return rc, output
 
     @retry(tries=3, delay=1)

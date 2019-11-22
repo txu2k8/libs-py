@@ -599,6 +599,46 @@ class KubernetesApi(object):
         return []
         # raise Exception('Failed to get pod')
 
+    def get_pods_info_by_label(self, label_selector=None):
+        if label_selector:
+            all_pods_info = self.corev1api.list_namespaced_pod(
+                namespace=self.namespace,
+                label_selector=label_selector
+            )
+        else:
+            all_pods_info = self.corev1api.list_namespaced_pod(
+                namespace=self.namespace
+            )
+
+        pods_info_list = []
+        for pod_info in all_pods_info.items:
+            pod_name = pod_info.metadata.name
+            tmp_pod_info = {}
+            tmp_pod_info['name'] = pod_name
+            tmp_pod_info['host_ip'] = pod_info.status.host_ip
+            tmp_pod_info['pod_ip'] = pod_info.status.pod_ip
+            tmp_pod_info['status'] = pod_info.status.phase
+            tmp_pod_info['node_name'] = pod_info.spec.node_name
+            tmp_pod_info['containers'] = []
+            tmp_pod_info['restart_count'] = 0
+            if pod_info.status.container_statuses is not None:
+                for container_status in pod_info.status.container_statuses:
+                    tmp_container_stat = {}
+                    if container_status.container_id is not None:
+                        tmp_container_stat['container_id'] = container_status.container_id.split('//')[-1]
+                    else:
+                        tmp_container_stat['container_id'] = container_status.container_id
+
+                    tmp_container_stat['image'] = container_status.image
+                    tmp_container_stat['ready'] = container_status.ready
+                    tmp_container_stat['restarts'] = container_status.restart_count
+
+                    tmp_pod_info['restart_count'] += container_status.restart_count
+                    tmp_pod_info['containers'].append(tmp_container_stat)
+            pods_info_list.append(tmp_pod_info)
+
+        return pods_info_list
+
     def get_pod_list_by_node(self, node_name, label_selector):
         """
         get_pod_list on nodes by label_selector

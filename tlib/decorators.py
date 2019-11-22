@@ -20,8 +20,8 @@ from tlib import exceptions as err
 from tlib import log
 
 __all__ = [
-    'Singleton', 'print_for_call', 'TraceUsedTime', 'needlinux', 'needposix', 'needmac',
-    'py_versioncheck'
+    'Singleton', 'print_for_call', 'TraceUsedTime', 'needlinux', 'needposix',
+    'needmac', 'py_versioncheck'
 ]
 
 logger = log.get_logger()

@@ -18,14 +18,13 @@ import json
 import threading
 from threading import Lock, Thread, Condition, Event
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import unittest
 
 from elasticsearch import Elasticsearch
 from elasticsearch.connection import create_ssl_context
-from elasticsearch.exceptions import TransportError, NotFoundError
+from elasticsearch.exceptions import TransportError
 
 
-from tlib import log, const
+from tlib import log
 from tlib.retry import retry
 from tlib.utils import util
 
@@ -33,7 +32,6 @@ from tlib.utils import util
 # --- Global
 # =============================
 logger = log.get_logger()
-args = const.get_value('args')
 # urllib3.disable_warnings()
 
 ES_CONN_TIMEOUT = 10800  # 180 min = 180 * 60 = 10800

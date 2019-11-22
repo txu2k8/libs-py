@@ -67,7 +67,7 @@ import sys
 from datetime import date, datetime
 import io
 import socket
-# import traceback
+import traceback
 from xml.sax import saxutils
 import unittest
 
@@ -571,6 +571,8 @@ class StressRunner(object):
 
         # results for write in mysql
         self.result_overview = ''
+        self.suite = user_args.project
+        self.tc = title.replace(user_args.project + '-', '').replace(user_args.project, '')
 
     def run(self, test):
         """
@@ -620,7 +622,7 @@ class StressRunner(object):
                 _result.result.append((n, t, o, e, cancled_time, lp))
         except Exception as e:
             self.logger.error(e)
-            # self.logger.error('{err}'.format(err=traceback.format_exc()))
+            self.logger.error('{err}'.format(err=traceback.format_exc()))
             failed_time = str(datetime.now() - _result.tc_start_time).split('.')[0]
             n, t, o, e, d, lp = _result.result[-1]
             if n == 4:
@@ -677,6 +679,8 @@ class StressRunner(object):
             # eg: write test result to mysql
             # eg: tar and backup test logs
             # eg: send email
+
+            # send email
             if self.mail_info:
                 subject = self.title
                 with open(self.report_path, 'rb') as f:
@@ -698,6 +702,34 @@ class StressRunner(object):
                 send_mail(subject, content, address_from, address_to, attach,
                           host, user, password, port, tls)
                 print(">> Send mail done.")
+
+            # tar logs
+
+            # write test result mysql
+            try:
+                from tlib.utils import util
+                util.remote_scp_put('10.25.119.1', self.report_path, '/sdb/log', 'root', 'password')
+                from tlib.db.pymysql_api import MySQLAPI
+                mysql_obj = MySQLAPI('10.25.119.1', 'pztest', 'password', port=3306, database='pztest')
+                insert_sql = '''INSERT INTO test_results 
+                        (Version, Suite, Test, Status, Results, StartTime, Elapsed, Tester, Report) 
+                        values (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        '''
+                data = [
+                    (self.test_version,
+                     self.suite,
+                     self.tc,
+                     test_status,
+                     self.result_overview,
+                     str(self.start_time).split('.')[0],
+                     self.elapsedtime,
+                     self.tester,
+                     os.path.basename(self.report_path)
+                     )
+                ]
+                mysql_obj.insert_update_delete(insert_sql, data)
+            except Exception as e:
+                self.logger.warning(e)
 
             return _result, test_status
 
@@ -749,8 +781,8 @@ class StressRunner(object):
         a_lines = []
         for name, value in heading_attrs:
             line = template.HEADING_ATTRIBUTE_TEMPLATE % dict(
-                name=saxutils.escape(name),
-                value=saxutils.escape(value),
+                name=saxutils.escape(str(name)),
+                value=saxutils.escape(str(value)),
             )
             a_lines.append(line)
 
@@ -780,7 +812,7 @@ class StressRunner(object):
             result.canceled_count]
         )
         pass_count = result.success_count + result.canceled_count
-        exec_count = total_count - result.canceled_count
+        exec_count = total_count - result.skipped_count
 
         status.append('ALL {0}'.format(total_count))
         if result.success_count:
