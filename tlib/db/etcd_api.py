@@ -7,6 +7,7 @@
 """python etcd api"""
 
 import etcd3
+
 from tlib.log import log
 
 # =============================
@@ -18,12 +19,12 @@ logger = log.get_logger()
 class EtcdAPI(object):
     _session = None
 
-    def __init__(self, etcd_ip, etcd_port, ca_cert, cert_key, cert_cert):
+    def __init__(self, etcd_ip, etcd_port, ca_crt, peer_key, peer_crt):
         self.etcd_ip = etcd_ip
         self.etcd_port = etcd_port
-        self.ca_cert = ca_cert
-        self.cert_key = cert_key
-        self.cert_cert = cert_cert
+        self.ca_crt = ca_crt
+        self.peer_key = peer_key
+        self.peer_crt = peer_crt
 
     @property
     def session(self):
@@ -32,9 +33,9 @@ class EtcdAPI(object):
                                                          self.etcd_port))
             self._session = etcd3.client(host=self.etcd_ip,
                                          port=self.etcd_port,
-                                         ca_cert=self.ca_cert,
-                                         cert_key=self.cert_key,
-                                         cert_cert=self.cert_cert)
+                                         ca_cert=self.ca_crt,
+                                         cert_key=self.peer_key,
+                                         cert_cert=self.peer_crt)
 
         return self._session
 
