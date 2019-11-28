@@ -20,9 +20,11 @@ PyPI: **https://pypi.org/project/tlib**
 1. [**docker**](https://github.com/txu2008/TLIB/blob/master/tlib/docker) docker manager API/Packages.
 1. [**es**](https://github.com/txu2008/tlib/tree/master/tlib/es) ElasticSearch related test
 1. [**fileop**](https://github.com/txu2008/tlib/tree/master/tlib/fileop) File operation related functions
+1. [**git**](https://github.com/txu2008/tlib/tree/master/tlib/git) Git commands opt; GitLab API
 1. [**jenkinslib**](https://github.com/txu2008/tlib/tree/master/tlib/jenkinslib) libs for jenkins
 1. [**k8s**](https://github.com/txu2008/TLIB/blob/master/tlib/k8s) Kubernetes API.
 1. [**log**](https://github.com/txu2008/TLIB/blob/master/tlib/log) logging config, colored, compress, log file/console.
+1. [**ltp**](https://github.com/txu2008/TLIB/blob/master/tlib/ltp) Linux Test Project tools
 1. [**mail**](https://github.com/txu2008/TLIB/blob/master/tlib/mail) Send email, attachment.
 1. [**platform**](https://github.com/txu2008/tlib/tree/master/tlib/platform) Linux/windows platform operations,such as shell,cmd,ssh_manager...
 1. [**vsphere**](https://github.com/txu2008/tlib/tree/master/tlib/vsphere) pyVmomi is the Python SDK for the VMware vSphere API that allows you to manage ESX, ESXi, and vCenter.
