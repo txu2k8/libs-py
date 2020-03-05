@@ -707,7 +707,7 @@ class StressRunner(object):
                 from tlib.utils import util
                 util.remote_scp_put('10.25.119.1', self.report_path, '/sdb/log', 'root', 'password')
                 from tlib.db.pymysql_api import MySQLAPI
-                mysql_obj = MySQLAPI('10.25.119.1', 'pztest', 'password', port=3306, database='pztest')
+                mysql_obj = MySQLAPI('10.25.119.1', 'test', 'password', port=3306, database='test')
                 insert_sql = '''INSERT INTO test_results 
                         (Version, Suite, Test, Status, Results, StartTime, Elapsed, Tester, Report) 
                         values (%s, %s, %s, %s, %s, %s, %s, %s, %s)

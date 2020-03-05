@@ -685,7 +685,7 @@ class DosCmd(Cmd):
         # To match:
         #  OK           X:        \\pune1-cc1\smoke         Microsoft Windows Network
         # or to match DFS share where 1st field - 'Status' is blank
-        #               Y:        \\pztest28.com\pune1-cc1\smoke
+        #               Y:        \\test28.com\pune1-cc1\smoke
         #                                                   Microsoft Windows Network
         drive_regx = re.compile(r'^(?:\S+\s+)?([A-Z]:)\s+')
         passed_sep = False
@@ -728,7 +728,7 @@ class DosCmd(Cmd):
 
     def get_domain(self):
         """
-        Processing below output to return domain string - 'pztest24.local'
+        Processing below output to return domain string - 'test24.local'
             C:\Windows\system32>wmic computersystem get domain
             Domain
             txupzqa.com
@@ -999,7 +999,7 @@ class DosCmd(Cmd):
         #IPC$                                         Remote IPC
         #ADMIN$       C:\Windows                      Remote Admin
         #EBS          C:\EBS
-        #NETLOGON     C:\Windows\SYSVOL\sysvol\pztest28.com\SCRIPTS
+        #NETLOGON     C:\Windows\SYSVOL\sysvol\test28.com\SCRIPTS
         #pune1-cc1    C:\DFSRoots\pune1-cc1
         #The command completed successfully.
         #
@@ -1057,16 +1057,16 @@ class DosCmd(Cmd):
 
     def GetDFSRoots(self, adFQDN):
         #"""
-        # Returns a list of DFS roots by parsing output of 'dfsutil domain pztest28.com'
+        # Returns a list of DFS roots by parsing output of 'dfsutil domain test28.com'
         # Process output like as below, lines between header and footer lines are DFS roots
         #
-        # C:\Users\Administrator>dfsutil domain pztest28.com
+        # C:\Users\Administrator>dfsutil domain test28.com
         #
-        # Roots on Domain pztest28.com
+        # Roots on Domain test28.com
         #
         # pune1-cc1
         #
-        # Done with Roots on Domain pztest28.com
+        # Done with Roots on Domain test28.com
         #
         # Done processing this command.
         #
@@ -1192,14 +1192,14 @@ class DosCmd(Cmd):
     def _getDFSLinkTargets(self, adDomainName, adFQDN, DFSRootName, shareName):
         """
         # Returns a data-structure of DFS link and targets by processing as below.
-        # C:\\Users\\Administrator>dfsutil /root:\\pztest28.com\\pune1-cc1 /view
+        # C:\\Users\\Administrator>dfsutil /root:\\test28.com\\pune1-cc1 /view
         # Domain Root with 1 Links [Blob Size: 720 bytes]
         #
         # Root Name="\\PZTEST28\\pune1-cc1" State="OK" Timeout="300"
         # Target="\\demoad\\pune1-cc1" State="ONLINE"  [Site: Default-First-Site-Name]
         #
         # Link Name="smoke" State="OK" Timeout="300"
-        #        Target="\\demoAD.pztest28.com\\pune1-cc1\\smoke" State="ONLINE"  [Site: Default-First-Site-Name]
+        #        Target="\\demoAD.test28.com\\pune1-cc1\\smoke" State="ONLINE"  [Site: Default-First-Site-Name]
         #        Target="\\pune1-cc1\\smoke" State="ONLINE"  [Site: Default-First-Site-Name]
         #
         # Root with 1 Links [Blob Size: 720 bytes]
@@ -1264,7 +1264,7 @@ class DosCmd(Cmd):
             if m:
                 target = m.group(1)
                 # site = m.group(2)  # Unused for now. But keeping it for future if need arises to use it.
-                # First target: Target="\\demoAD.pztest28.com\pune1-cc1\smoke" State="ONLINE"  [Site: Default-First-Site-Name]
+                # First target: Target="\\demoAD.test28.com\pune1-cc1\smoke" State="ONLINE"  [Site: Default-First-Site-Name]
                 # pointing to local share is created while adding link; so ignore it while collecting targets
                 # Select only #2 part targets like: Target="\\pune1-cc1\smoke" State="ONLINE"  [Site: Default-First-Site-Name]
                 targetParts = [ p for p in target.split('\\') if len(p) > 0 ]  # Splitting '\\' on '\' makes empty fields, so ignore them

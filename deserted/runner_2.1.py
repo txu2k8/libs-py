@@ -1095,7 +1095,7 @@ class StressRunner(TemplateMix):
             try:
                 util.remote_scp_put('10.25.119.1', self.report_path_full, '/sdb/log', 'root', 'password')
                 from tlib.mysqldb_obj import MySQLObj
-                mysql_obj = MySQLObj(host='10.25.119.1', user='pztest', password='password', port=3306, database='pztest')
+                mysql_obj = MySQLObj(host='10.25.119.1', user='test', password='password', port=3306, database='test')
                 insert_sql = '''INSERT INTO test_results (Version, Suite, Test, Status, Results, StartTime, Elapsed, 
                                 Tester, Report) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)'''
                 data = [(self.test_version, self.suite, self.tc, test_status, self.status,

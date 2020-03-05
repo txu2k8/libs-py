@@ -110,9 +110,9 @@ class GitManager(object):
 
 
 if __name__ == '__main__':
-    git_1 = GitManager('C:\\GitRepository\\pztest')
+    git_1 = GitManager('C:\\GitRepository\\test')
     git_1.pull()
     git_1.get_current_branch()
 
-    git_2 = GitManager('/root/Git/pztest', '10.180.119.1', 'root', 'password')
+    git_2 = GitManager('/root/Git/test', '10.180.119.1', 'root', 'password')
     git_2.get_current_branch()

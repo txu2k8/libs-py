@@ -174,7 +174,7 @@ class IFS(Base):
 
         # From test-bed XML, 'Domain' key will have FQDN value and so assign it 'adFQDN'
         mapInput['adFQDN'] = mapInput['adDomain']
-        # Convert adDomain name 'pztest28.com' to 'pztest28' by removing '.com'
+        # Convert adDomain name 'test28.com' to 'test28' by removing '.com'
         adDomainRegx = re.compile(r'^([^.]+).*')
         m = adDomainRegx.match(mapInput['adFQDN'])
         mapInput['adDomain'] = m.group(1)
@@ -255,7 +255,7 @@ class IFS(Base):
         # Value of resource is based upon 'useDFS' flag.
         # In a normal setup it will be like '\\pune1-cc1\smoke' in '\\<CC name>\<share Name>' format
         resource = '\\\\' + cc + '\\' + shareName
-        # FOR DFS it will be like '\\pztest28.com\pune1-cc1\smoke' in '\\<FQDN>\<CC name>\<share Name>' where <CC name>
+        # FOR DFS it will be like '\\test28.com\pune1-cc1\smoke' in '\\<FQDN>\<CC name>\<share Name>' where <CC name>
         #                          is the name of master CC which is used for creating a root in DFS namespace
         if useDFS:
             resource = '\\\\' + adFQDN + '\\' + cc + '\\' + shareName

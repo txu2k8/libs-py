@@ -89,4 +89,4 @@ class DockerManager(SSHManager):
 if __name__ == '__main__':
     node_ip = '10.25.119.71'
     docker_obj = DockerManager(node_ip)
-    print(docker_obj.docker_login('panzura.ai.registry:5000'))
+    print(docker_obj.docker_login('company.ai.registry:5000'))

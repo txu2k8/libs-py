@@ -1704,7 +1704,7 @@ class VsphereApiTestCase(unittest.TestCase):
     """Test cases for VsphereApi"""
 
     def setUp(self) -> None:
-        self.vsp_api = VsphereApi('10.25.1.8', 'txu@panzura.com', 'pass@0612')
+        self.vsp_api = VsphereApi('10.25.1.8', 'txu@company.com', 'pass@0612')
 
     def tearDown(self) -> None:
         pass
