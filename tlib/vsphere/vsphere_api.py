@@ -38,6 +38,8 @@ from tlib.ds import sort_dict
 # --- Global
 # =============================
 logger = log.get_logger()
+WINDOWS = os.name == "nt"
+OVFTOOL = "C:/Program Files/VMware/VMware OVF Tool/ovftool.exe" if WINDOWS else "ovftool"
 
 
 class VsphereApi(object):
@@ -346,7 +348,7 @@ class VsphereApi(object):
         return vm.name
 
     @staticmethod
-    def get_vm_host_name(vm):
+    def get_vm_hostname(vm):
         return vm.guest.hostName
 
     @staticmethod
@@ -1648,6 +1650,54 @@ class VsphereApi(object):
                 raise Exception("Lease error: " + lease.state.error)
             else:
                 logger.warning(lease.state)
+
+    def deploy_by_ovftool(self, network, ds, vmname, hostname, eth0, netmask,
+                          eth1, gw, dns, ovf_path, dc, host=None,
+                          cluster=None, respool=None):
+        pre_cmd = '"{ovftool}" --noSSLVerify --acceptAllEulas \
+            --network="{network}" \
+            --datastore="{ds}" \
+            --name={vmname} \
+            --prop:VIZION.hostname.setup={hostname} \
+            --prop:VIZION.eth0.setup={eth0} \
+            --prop:VIZION.eth0_netmask.setup={netmask0} \
+            --prop:VIZION.eth1.setup={eth1} \
+            --prop:VIZION.eth1_netmask.setup={netmask1} \
+            --prop:VIZION.gateway.setup={gw} \
+            --prop:VIZION.dns.setup={dns} \
+            {ovf_path} \
+            vi://{vc_user}:{vc_pwd}@{vc_ip}'.format(ovftool=OVFTOOL,
+                                                    network=network, ds=ds,
+                                                    vmname=vmname,
+                                                    hostname=hostname,
+                                                    eth0=eth0,
+                                                    netmask0=netmask,
+                                                    eth1=eth1,
+                                                    netmask1=netmask,
+                                                    gw=gw,
+                                                    dns=dns,
+                                                    ovf_path=ovf_path,
+                                                    vc_user=self.user,
+                                                    vc_pwd=self.password,
+                                                    vc_ip=self.host)
+
+        if cluster and respool:
+            cmd = '{pre_cmd}/{dc}/host/{cluster}/Resources/{respool}'.format(pre_cmd=pre_cmd, dc=dc, cluster=cluster,
+                                                                             respool=respool)
+        elif cluster and not respool:
+            cmd = '{pre_cmd}/{dc}/host/{cluster}'.format(pre_cmd=pre_cmd, dc=dc, cluster=cluster)
+        elif not cluster and respool:
+            cmd = '{pre_cmd}/{dc}/host/{host}/Resources/{respool}'.format(pre_cmd=pre_cmd, dc=dc, host=host,
+                                                                          respool=respool)
+        else:
+            cmd = '{pre_cmd}/{dc}/host/{host}'.format(pre_cmd=pre_cmd, dc=dc, host=host)
+
+        rc, output = util.run_cmd(cmd, expected_rc=0)
+        if 'Completed successfully' in output:
+            return True
+        else:
+            logger.error(output)
+            raise Exception('Deploy ovf failed.')
 
 
 class VsphereApiTestCase(unittest.TestCase):

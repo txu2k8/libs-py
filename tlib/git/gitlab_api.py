@@ -100,3 +100,10 @@ class GitlabAPI(object):
 
 if __name__ == '__main__':
     pass
+    GITLAB_URL = 'http://gitlab.test.com'
+    GITLAB_PRIVATE_TOKEN = 'xjB1FHHySSSSSS'
+    GITLAB_PROJECT_NAME = 'project/test'
+    gitlab_obj = GitlabAPI(GITLAB_URL, GITLAB_PRIVATE_TOKEN)
+    print(gitlab_obj.get_job_obj_by_name('build-image',
+                                         'develop-01',
+                                         GITLAB_PROJECT_NAME))

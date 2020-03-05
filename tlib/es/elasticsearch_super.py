@@ -408,6 +408,127 @@ class EsSuper(object):
     def put_cluster_setting(self, body):
         self.conn.cluster.put_settings(body)
 
+    # ===============
+    # Snapshot
+    # class elasticsearch.client.SnapshotClient(client)
+    # ===============
+    def get_snapshot_info(self, repository, snap_name):
+        """
+        Returns information about a snapshot.
+        :param repository: A repository name
+        :param snap_name: A comma-separated list of snapshot names
+        :return:
+        """
+        return self.conn.snapshot.get(repository, snap_name,
+                                      master_timeout=ES_CONN_TIMEOUT)
+
+    def get_snapshot_status(self, repository, snap_name):
+        """
+        Returns information about the status of a snapshot.
+        :param repository:A repository name
+        :param snap_name:A comma-separated list of snapshot names
+        :return:
+        """
+
+        return self.conn.snapshot.status(repository, snap_name,
+                                         ignore_unavailable=True,
+                                         master_timeout=ES_CONN_TIMEOUT)
+
+    def get_repository_info(self, repository):
+        """
+        Returns information about a repository.
+        :param repository:A repository name
+        :return:
+        """
+        return self.conn.snapshot.get_repository(repository, local=False,
+                                                 master_timeout=ES_CONN_TIMEOUT)
+
+    def verify_repository(self, repository):
+        """
+        Verifies a repository.
+        :param repository:A repository name
+        :return:
+        """
+        return self.conn.snapshot.verify_repository(
+            repository,
+            master_timeout=ES_CONN_TIMEOUT,
+            timeout=ES_OPERATION_TIMEOUT
+        )
+
+    def create_repository(self, repository, body):
+        """
+        Creates a repository.
+        :param repository: A repository name
+        :param body: The repository definition
+        :return:
+        """
+        return self.conn.snapshot.create_repository(
+            repository, body,
+            master_timeout=ES_CONN_TIMEOUT,
+            timeout=ES_OPERATION_TIMEOUT, verify=True
+        )
+
+    def create_snapshot(self, repository, snap_name, body):
+        """
+        Creates a snapshot in a repository.
+        :param repository: A repository name
+        :param snap_name: A snapshot name
+        :param body: The snapshot definition
+        :return:
+        """
+
+        return self.conn.snapshot.create(
+            repository, snap_name, body,
+            master_timeout=ES_CONN_TIMEOUT, wait_for_completion=True
+        )
+
+    def cleanup_repository(self, repository):
+        """
+        Removes stale data from repository.
+        :param repository: A repository name
+        :return:
+        """
+        return self.conn.snapshot.cleanup_repository(
+            repository,
+            master_timeout=ES_CONN_TIMEOUT, timeout=ES_OPERATION_TIMEOUT
+        )
+
+    def delete_repository(self, repository):
+        """
+        Deletes a repository.
+        :param repository:A comma-separated list of repository names
+        :return:
+        """
+        return self.conn.snapshot.create_repository(
+            repository,
+            master_timeout=ES_CONN_TIMEOUT, timeout=ES_OPERATION_TIMEOUT
+        )
+
+    def delete_snapshot(self, repository, snap_name):
+        """
+        Deletes a snapshot.
+        :param repository: A repository name
+        :param snap_name: A snapshot name
+        :return:
+        """
+
+        return self.conn.snapshot.delete(
+            repository, snap_name, master_timeout=ES_CONN_TIMEOUT)
+
+    def restore_snapshot(self, repository, snap_name, body):
+        """
+
+        :param repository:A repository name
+        :param snap_name:A snapshot name
+        :param body:Details of what to restore
+        :return:
+        """
+
+        return self.conn.snapshot.restore(
+            repository, snap_name, body,
+            master_timeout=ES_CONN_TIMEOUT, wait_for_completion=True
+        )
+
 
 if __name__ == "__main__":
     es_ips = ['10.25.119.7']

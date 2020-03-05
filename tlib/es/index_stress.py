@@ -160,7 +160,7 @@ class ElasticsearchObj(object):
             raise Exception(e)
 
 
-class ElasticsearchStress(ElasticsearchObj):
+class ESIndexStress(ElasticsearchObj):
     """
     Elasticsearch Stress
     FYI: https://github.com/logzio/elasticsearch-stress-test
@@ -169,7 +169,7 @@ class ElasticsearchStress(ElasticsearchObj):
     def __init__(self, esaddress, username, password, port, cafile, no_verify, indices, documents, clients, seconds,
                  number_of_shards, number_of_replicas, bulk_size, max_fields_per_document, max_size_per_field, cleanup,
                  stats_frequency, green, index_name=None):
-        super(ElasticsearchStress, self).__init__(esaddress, username, password, port, cafile, no_verify)
+        super(ESIndexStress, self).__init__(esaddress, username, password, port, cafile, no_verify)
         self.esaddress = esaddress
         self.indices = indices
         self.documents = documents

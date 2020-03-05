@@ -26,7 +26,7 @@ except ImportError:
 
 from tlib import log
 from tlib.retry import retry, retry_call
-# from tlib.ds import escape
+from tlib.ds import escape
 from tlib.bs import ip_to_int, int_to_ip, strsize_to_byte
 
 # =============================
@@ -42,6 +42,41 @@ DD_BINARY = os.path.join(os.getcwd(), r'bin\dd\dd.exe') if WINDOWS else 'dd'
 MD5SUM_BINARY = os.path.join(os.getcwd(), r'bin\git\md5sum.exe') if WINDOWS else 'md5sum'
 
 
+# parameters that apply to all methods
+def query_params(*func_query_params):
+    """
+    Decorator that pops all accepted parameters from method's kwargs and puts
+    them in the params argument.
+    "arg=1" means the arg default value is "1"
+    :param func_query_params:
+    :return:
+    """
+
+    def _wrapper(func):
+        @wraps(func)
+        def _wrapped(*args, **kwargs):
+            params = {}
+            if "params" in kwargs:
+                params = kwargs.pop("params").copy()
+            for p in func_query_params:
+                if p in kwargs:
+                    v = kwargs.pop(p)
+                    if v is not None:
+                        params[p] = v  # escape(v)
+
+            # don't treat ignore and request_timeout as other params
+            # to avoid escaping
+            for p in ("ignore", "request_timeout"):
+                if p in kwargs:
+                    params[p] = kwargs.pop(p)
+            return func(*args, params=params, **kwargs)
+
+        return _wrapped
+
+    return _wrapper
+
+
+# print the func Enter/Output info
 def print_for_call(func):
     """
     Enter <func>.
@@ -312,13 +347,7 @@ def get_local_ip():
     Get the local ip address --linux/windows
     :return:local_ip
     """
-
-    if WINDOWS:
-        local_ip = socket.gethostbyname(socket.gethostname())
-    else:
-        local_ip = os.popen("ifconfig | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{print $1}' | "
-                            "head -1").read().strip('\n')
-    return local_ip
+    return socket.gethostbyname(socket.gethostname())
 
 
 def get_local_hostname():

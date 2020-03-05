@@ -43,9 +43,11 @@ class EtcdAPI(object):
         return self.session.get(key)
 
     def get_prefix(self, key_prefix):
+        logger.info('etcdctlv3 get --prefix {0}'.format(key_prefix))
         return self.session.get_prefix(key_prefix)
 
     def delete_prefix(self, key_prefix):
+        logger.info('etcdctlv3 del --prefix {0}'.format(key_prefix))
         return self.session.delete_prefix(key_prefix)
 
 

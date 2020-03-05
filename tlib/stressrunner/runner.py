@@ -136,15 +136,7 @@ def get_local_ip():
     Get the local ip address --linux/windows
     :return:(char) local_ip
     """
-
-    if WINDOWS:
-        local_ip = socket.gethostbyname(socket.gethostname())
-    else:
-        local_ip = os.popen(
-            "ifconfig | grep 'inet ' | grep -v '127.0.0.1' "
-            "|grep -v '172.17.0.1' |grep -v ' 10.233.' "
-            "| cut -d: -f2 | awk '{print $2}' | head -1").read().strip('\n')
-    return local_ip
+    return socket.gethostbyname(socket.gethostname())
 
 
 def get_local_hostname():
@@ -704,6 +696,11 @@ class StressRunner(object):
                 print(">> Send mail done.")
 
             # tar logs
+            skip_tar_test_suite = ['deploy', 'maintenance', 'tools']
+            if (_result.failure_count + _result.error_count) > 0 \
+                    and self.user_args.suite not in skip_tar_test_suite:
+                # TODO
+                pass
 
             # write test result mysql
             try:

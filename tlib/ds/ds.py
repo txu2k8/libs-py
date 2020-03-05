@@ -11,7 +11,6 @@ import sys
 import base64
 from datetime import date, datetime
 from collections import OrderedDict
-from functools import wraps
 
 import yaml
 from tlib import log
@@ -71,42 +70,6 @@ def escape(value):
             return value.encode("utf-8")
 
     return str(value)
-
-
-# parameters that apply to all methods
-GLOBAL_PARAMS = ("timeout",)
-
-
-def query_params(*func_query_params):
-    """
-    Decorator that pops all accepted parameters from method's kwargs and puts
-    them in the params argument.
-    :param func_query_params:
-    :return:
-    """
-
-    def _wrapper(func):
-        @wraps(func)
-        def _wrapped(*args, **kwargs):
-            params = {}
-            if "params" in kwargs:
-                params = kwargs.pop("params").copy()
-            for p in func_query_params + GLOBAL_PARAMS:
-                if p in kwargs:
-                    v = kwargs.pop(p)
-                    if v is not None:
-                        params[p] = escape(v)
-
-            # don't treat ignore and request_timeout as other params
-            # to avoid escaping
-            for p in ("ignore", "request_timeout"):
-                if p in kwargs:
-                    params[p] = kwargs.pop(p)
-            return func(*args, params=params, **kwargs)
-
-        return _wrapped
-
-    return _wrapper
 
 
 # list/dict 处理
@@ -252,6 +215,18 @@ def ordered_yaml_load(yaml_path, Loader=yaml.Loader, object_pairs_hook=OrderedDi
     OrderedLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
     with open(yaml_path) as stream:
         return yaml.load(stream, OrderedLoader)
+
+
+def ordered_yaml_loads(yaml_data, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
+    class OrderedLoader(Loader):
+        pass
+
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return object_pairs_hook(loader.construct_pairs(node))
+
+    OrderedLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
+    return yaml.load(yaml_data, OrderedLoader)
 
 
 def ordered_yaml_dump(data, stream=None, Dumper=yaml.SafeDumper, **kwds):

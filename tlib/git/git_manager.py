@@ -64,14 +64,16 @@ class GitManager(object):
         return branch
 
     def get_change_list(self, since=None):
-        if since is None:
-            since = '1.day'
-
         rc, output1 = self.run_cmd('date', expected_rc=0)
         logger.info(output1)
 
-        cmd_log = 'cd {0} && git log --since="{1}" --date=local --pretty=format:"%an - %h - %ad: %n%s%n"'.format(
-            self.build_path, since)
+        if since is None:
+            cmd_log = 'cd {0} && git log --pretty=oneline  ORIG_HEAD..'.format(self.build_path)
+        else:
+            # since = '1.day'
+            cmd_log = 'cd {0} && git log --since="{1}" --date=local ' \
+                      '--pretty=format:"%an - %h - %ad: %n%s%n"'.format(self.build_path, since)
+
         rc, output2 = self.run_cmd(cmd_log, expected_rc=0)
         logger.info(output2)
         return output1.strip(), output2.strip()

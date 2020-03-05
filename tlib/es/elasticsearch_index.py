@@ -12,7 +12,7 @@ import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from tlib.es.elasticsearch_super import EsSuper
-from tlib.es.es_doc_setting import TEST_META_INDEX_SETTING
+from tlib.es.example_settings import CREATE_INDEX_BODY
 from tlib import log
 from tlib.retry import retry
 from tlib.utils import util
@@ -168,7 +168,7 @@ class ElasticsearchIndex(EsSuper):
         """
 
         # Basic configuration
-        index_setting = TEST_META_INDEX_SETTING
+        index_setting = CREATE_INDEX_BODY
         start_time = datetime.datetime.now()
 
         try:

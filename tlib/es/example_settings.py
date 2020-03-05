@@ -4,13 +4,22 @@
 # @Author  : Tao.Xu
 # @Email   : tao.xu2008@outlook.com
 
-"""es doc template"""
+"""es index / search example body template"""
 
+import random
+import uuid
+import string
+
+from tlib.utils import util
+
+# ===============
+# Index
+# ===============
 DOC_TYPE = 'doc'
-TEST_ANALYZER = 'test_analyzer'
+ANALYZER = 'test_analyzer'
 INDEX_ANALYSIS_FOR_WILDCARD = {
     "analyzer": {
-        TEST_ANALYZER: {
+        ANALYZER: {
             "type": "custom",
             "tokenizer": "keyword",
             "filter": [
@@ -47,7 +56,7 @@ INDEX_SETTING = {
     # "index.mapping.total_fields.limit": 1000000,
     "index.translog.durability": "request",
 }
-TEST_META_INDEX_SETTING = {
+CREATE_INDEX_BODY = {
     "settings": INDEX_SETTING,
     "mappings": {
         DOC_TYPE: {
@@ -60,8 +69,8 @@ TEST_META_INDEX_SETTING = {
                 },
                 "file": {
                     "type": "text",
-                    "analyzer": TEST_ANALYZER,
-                    "search_analyzer": TEST_ANALYZER
+                    "analyzer": ANALYZER,
+                    "search_analyzer": ANALYZER
                 },
                 "file_term": {
                     "type": "keyword"
@@ -138,3 +147,80 @@ TEST_META_INDEX_SETTING = {
     }
 }
 
+
+def random_int(max_size, min_size=3):
+    try:
+        return random.randint(min_size, max_size)
+    except Exception as e:
+        print("Not supporting {0} as valid sizes!".format(max_size))
+        raise e
+
+
+# Generate a random string with length of 1 to provided param
+def random_string(max_size):
+    return ''.join(
+        random.choice(string.ascii_letters + string.digits) for _ in
+        range(random_int(max_size)))
+
+
+def random_doc():
+    doc = {
+        "doc_c_time": util.get_current_time(),
+        "cc_id": str(uuid.uuid4()),
+        "cc_name": random_string(15),
+        "tenant": random_string(5),
+        "name": '{0}.{1}'.format(random_string(10),
+                                 random_string(3)),
+        "name_term": '{0}.{1}'.format(random_string(10),
+                                      random_string(3)),
+        "is_file": True,
+        "path": random.choice(["", "/", "/dir", "/dir" + "{}".format(
+            random.randint(1, 100))]),
+        "last_used_time": util.get_current_time(),
+        'file_system': random_string(5),
+        "atime": util.get_current_time(),
+        "mtime": util.get_current_time(),
+        "ctime": util.get_current_time(),
+        "size": random.randint(1, 1000000),
+        "is_folder": False,
+        "app_type": "test Index & Search",
+        "uid": random.randint(0, 10),
+        "denied": [],
+        "app_id": str(uuid.uuid4()),
+        "app_name": random_string(10),
+        "gid": random.randint(0, 10),
+        "doc_i_time": util.get_current_time(),
+        "file_id": str(random.randint(11111111111111111111111111111111,
+                                      99999911111111111111111111111111)),
+        "file": random_string(20),
+        "allowed": ["FULL"]
+    }
+
+    return doc
+
+
+# ===============
+# search
+# ===============
+SEARCH_BODY_1 = {
+    "query": {
+            "bool": {
+                "must": {"match": {"uid": 3}},
+                "must_not": {"term": {"file": "test_elasticsearch"}},
+            }
+    },
+}
+SEARCH_BODY_2 = {
+    "query": {"term": {"app_type": "test Index & Search"}},
+    "sort": [{"ctime": {"order": "desc"}}],
+    "size": 8,
+}
+SEARCH_BODY_3 = {
+    "size": 0,
+    "aggs": {
+        "committers": {
+            "terms": {"field": "committer.name.keyword"},
+            "aggs": {"line_stats": {"stats": {"field": "stats.lines"}}},
+        }
+    },
+}

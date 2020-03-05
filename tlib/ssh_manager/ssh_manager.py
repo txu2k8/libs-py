@@ -7,9 +7,12 @@
 """ paramiko ssh """
 
 import re
+import time
 import paramiko
 import scp
 import inspect
+import socket
+import subprocess
 import unittest
 
 from tlib import log
@@ -41,9 +44,11 @@ class SSHManager(object):
 
     def __del__(self):
         # logger.debug('Enter SSHObj.__del__()')
-        if self._ssh:
+        try:
             self._ssh.close()
-        del self._ssh
+            del self._ssh
+        except Exception as e:
+            pass
 
     @property
     def ssh(self):
@@ -82,6 +87,49 @@ class SSHManager(object):
     @property
     def is_active(self):
         return self.ssh.get_transport().is_active()
+
+    def subprocess_popen_cmd(self, cmd_spec, timeout=7200,
+                             docker_image=None, docker_args=''):
+        """
+        Executes command and Returns (rc, output) tuple
+        :param cmd_spec: Command to be executed
+        :param output: A flag for collecting STDOUT and STDERR of command execution
+        :param timeout
+        :param docker_image:
+        :param docker_args:
+        :return:
+        """
+
+        sudo = False if self.username == 'root' else True
+        # sudo = False if 'kubectl' in cmd_spec else sudo
+
+        if docker_image:
+            cmd_spec = "docker run -i --rm --network host {0} " \
+                       "-v /dev:/dev -v /etc:/etc --privileged {1} bash " \
+                       "-c '{2}'".format(docker_args, docker_image, cmd_spec)
+        elif sudo:
+            cmd_spec = 'sudo {cmd}'.format(cmd=cmd_spec)
+
+        logger.info('Execute: {cmds}'.format(cmds=cmd_spec))
+        try:
+            p = subprocess.Popen(cmd_spec, stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE, shell=True)
+            t_beginning = time.time()
+
+            while True:
+                if p.poll() is not None:
+                    break
+                seconds_passed = time.time() - t_beginning
+                if timeout and seconds_passed > timeout:
+                    p.terminate()
+                    raise TimeoutError('TimeOutError: {0} seconds'.format(timeout))
+                time.sleep(0.1)
+
+            std_out = p.stdout.read().decode('UTF-8', 'ignore')
+            std_err = p.stderr.read().decode('UTF-8', 'ignore')
+            return std_out, std_err
+        except Exception as e:
+            raise Exception('Failed to execute: {0}\n{1}'.format(cmd_spec, e))
 
     def paramiko_ssh_cmd(self, cmd_spec, timeout=7200, get_pty=False,
                          docker_image=None, docker_args=''):
@@ -134,13 +182,23 @@ class SSHManager(object):
 
         # Get name of the calling method, returns <methodName>'
         method_name = inspect.stack()[1][3]
-        stdout, stderr = retry_call(self.paramiko_ssh_cmd,
-                                    fkwargs={'cmd_spec': cmd_spec,
-                                             'timeout': timeout,
-                                             'get_pty': get_pty,
-                                             'docker_image': docker_image,
-                                             'docker_args': docker_args},
-                                    tries=tries, delay=delay, logger=logger)
+        if self.ip == socket.gethostbyname(socket.gethostname()):
+            # run command on local host
+            stdout, stderr = retry_call(self.subprocess_popen_cmd,
+                                        fkwargs={'cmd_spec': cmd_spec,
+                                                 'timeout': timeout,
+                                                 'docker_image': docker_image,
+                                                 'docker_args': docker_args},
+                                        tries=tries, delay=delay, logger=logger)
+        else:
+            stdout, stderr = retry_call(self.paramiko_ssh_cmd,
+                                        fkwargs={'cmd_spec': cmd_spec,
+                                                 'timeout': timeout,
+                                                 'get_pty': get_pty,
+                                                 'docker_image': docker_image,
+                                                 'docker_args': docker_args},
+                                        tries=tries, delay=delay, logger=logger)
+
         rc = -1 if stderr else 0
         output = stdout + stderr if stderr else stdout
         if isinstance(expected_rc, str) and expected_rc.upper() == 'IGNORE':

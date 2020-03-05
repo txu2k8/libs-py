@@ -10,7 +10,7 @@ from tlib.log import log
 from tlib import const
 from tlib.utils import util
 from tlib.es.elasticsearch_index import ElasticsearchIndex
-from tlib.es.elasticsearch_stress import ElasticsearchStress, ElasticsearchObj
+from tlib.es.index_stress import ESIndexStress, ElasticsearchObj
 
 # =============================
 # --- Global
@@ -57,8 +57,8 @@ CA_FILE = args.cafile
 NO_VERIFY_CERTS = args.no_verify
 
 
-class ElasticsearchIndexTestCase(unittest.TestCase):
-    """Elasticsearch Index Test Cases"""
+class ESIndexTestCase(unittest.TestCase):
+    """Elastic search Index Test Cases"""
 
     def setUp(self) -> None:
         pass
@@ -79,9 +79,9 @@ class ElasticsearchIndexTestCase(unittest.TestCase):
         util.sleep_progressbar(600)
 
 
-class ElasticsearchStressTestCase(unittest.TestCase):
+class ESIndexStressTestCase(unittest.TestCase):
     """
-    Elasticsearch Stress unit test cases
+    Elastic search Index Stress unit test cases
     """
 
     def setUp(self):
@@ -94,7 +94,7 @@ class ElasticsearchStressTestCase(unittest.TestCase):
         """Elasticsearch Stress Test"""
         logger.info(self.test_stress.__doc__)
 
-        es_stress_obj = ElasticsearchStress(
+        es_stress_obj = ESIndexStress(
             ES_ADDRESS, ES_USERNAME, ES_PASSWORD, ES_PORT, CA_FILE, NO_VERIFY_CERTS,
             NUMBER_OF_INDICES, NUMBER_OF_DOCUMENTS, NUMBER_OF_CLIENTS,
             NUMBER_OF_SECONDS, NUMBER_OF_SHARDS, NUMBER_OF_REPLICAS, BULK_SIZE,

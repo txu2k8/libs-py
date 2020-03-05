@@ -226,7 +226,7 @@ class _LoggerMan(object):
     def verify_logfile(self, logfile):
         logfile = logfile + '.log' if not logfile.endswith('.log') else logfile
         logfile_split = os.path.split(logfile)
-        log_path = os.path.join(os.getcwd(), 'logs', logfile_split[0])
+        log_path = os.path.join(os.getcwd(), 'log', logfile_split[0])
         self.verify_path(log_path)
 
         log_name = logfile_split[1]
@@ -364,8 +364,9 @@ def init_logger(logfile='debug.log', logger_name='test', log_level=FILE_LEVEL,
     return new_logger
 
 
-def get_logger(logfile='debug.log', logger_name='test', output_logfile=True, compress_log=False, gen_wf=False,
-               print_console=True, colored_console=True, debug=False, reset_logger=False):
+def get_logger(logfile='debug.log', logger_name='test', output_logfile=True,
+               compress_log=False, gen_wf=False, print_console=True,
+               colored_console=True, debug=False, reset_logger=False):
     if debug:
         global FILE_LEVEL, CONSOLE_LEVEL, CONSOLE_FORMATE, FILE_FORMATE
         FILE_LEVEL = logging.DEBUG

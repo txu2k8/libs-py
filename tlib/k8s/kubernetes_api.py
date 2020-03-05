@@ -93,39 +93,45 @@ class KubernetesApi(object):
         rtn_dict = {'stdout': None, 'stderr': None}
         r_code = 1
         json_stdout = ''
+        if not run_async:
+            cmd = "/opt/ccc/node/util/pod_console.sh \"{0}\"".format(cmd)
 
         try:
             if container:
-                'Execute: ssh root@10.25.119.76# ls /etc/kubernetes/pki/etcd/'
                 logger.info('Execute on pod [{0}:{1}]# {2}'.format(pod_name, container, cmd))
-                resp = stream(self.corev1api.connect_get_namespaced_pod_exec, name=pod_name, namespace=self.namespace,
-                              command=['/bin/bash'], container=container, stderr=True, stdin=True, stdout=True,
+                resp = stream(self.corev1api.connect_get_namespaced_pod_exec,
+                              name=pod_name, namespace=self.namespace,
+                              command=['/bin/bash'], container=container,
+                              stderr=True, stdin=True, stdout=True,
                               tty=False, _preload_content=False)
             else:
                 logger.info('Execute on pod [{0}]# {1}'.format(pod_name, cmd))
-                resp = stream(self.corev1api.connect_get_namespaced_pod_exec, name=pod_name, namespace=self.namespace,
-                              command=['/bin/bash'], stderr=True, stdin=True, stdout=True,
-                              tty=False, _preload_content=False)
+                resp = stream(self.corev1api.connect_get_namespaced_pod_exec,
+                              name=pod_name, namespace=self.namespace,
+                              command=['/bin/bash'], stderr=True, stdin=True,
+                              stdout=True, tty=False, _preload_content=False)
+
+            cmd = "{}\n ".format(cmd)
             break_f = False
             resp.update(timeout=timeout)
             while resp.is_open():
                 if not run_async:
-                    # resp.update(timeout=timeout)
                     if resp.peek_stdout():
                         json_stdout += resp.read_stdout(timeout=timeout)
                     if break_f:
                         break
-                    resp.write_stdin("/opt/node/util/pod_console.sh \"{}\"\n".format(cmd))
+                    resp.write_stdin(cmd)
                     break_f = True
                 elif stdout:
-                    # resp.update(timeout=timeout)
-                    resp.write_stdin("{}\n ".format(cmd))
+                    resp.write_stdin(cmd)
+                    break_f = True
                     if resp.peek_stdout() or resp.peek_stderr():
                         rtn_dict['stdout'] = resp.read_stdout(timeout=timeout).strip()
                         rtn_dict['stderr'] = resp.read_stderr(timeout=timeout).strip()
+                    if break_f:
                         break
                 else:
-                    resp.write_stdin("{}\n ".format(cmd))
+                    resp.write_stdin(cmd)
                     break
             resp.close()
             if not run_async:
@@ -150,6 +156,63 @@ class KubernetesApi(object):
             raise e
 
         return r_code, rtn_dict
+
+    def run_cmd_interactively(self, pod_name, commands, container=None, timeout=3):
+        """
+        Call pod exec interactively
+        FYI: https://github.com/kubernetes-client/python/blob/master/examples/pod_exec.py
+        :param pod_name:
+        :param commands: command list
+        :param container: pod container name
+        :param timeout: timeout in seconds
+        :return:
+        """
+        if not isinstance(commands, list):
+            commands = [commands]
+        exec_command = ['/bin/sh']
+        if container:
+            logger.info('Execute on pod [{0}:{1}]# {2}'.format(
+                pod_name, container, commands))
+            resp = stream(self.corev1api.connect_get_namespaced_pod_exec,
+                          pod_name, namespace=self.namespace,
+                          command=exec_command, container=container,
+                          stderr=True, stdin=True,
+                          stdout=True, tty=False,
+                          _preload_content=False)
+        else:
+            logger.info('Execute on pod [{0}]# {1}'.format(pod_name, commands))
+            resp = stream(self.corev1api.connect_get_namespaced_pod_exec,
+                          pod_name, namespace=self.namespace,
+                          command=exec_command,
+                          stderr=True, stdin=True,
+                          stdout=True, tty=False,
+                          _preload_content=False)
+
+        rc, output = 0, ''
+
+        while resp.is_open():
+            resp.update(timeout=timeout)
+            if resp.peek_stdout():
+                output += resp.read_stdout()
+                logger.debug("STDOUT: %s" % output)
+            if resp.peek_stderr():
+                rc = -1
+                output += resp.read_stderr()
+                output += resp.read_stdout()
+                logger.debug("STDERR: %s" % output)
+            if commands:
+                c = commands.pop(0)
+                print("EXECUTE: %s" % c)
+                resp.write_stdin(c + "\n")
+            else:
+                break
+
+        # resp.write_stdin("whoami\n")
+        # user = resp.readline_stdout(timeout=3)
+        # print("Server user is: %s" % user)
+        resp.close()
+
+        return rc, output
 
     def pod_exec_cmd(self, pod_name, cmd, container=None, timeout=360):
         rtn_dict = {'stdout': None, 'stderr': None}
@@ -190,8 +253,7 @@ class KubernetesApi(object):
             tmp_info = {}
             tmp_info['name'] = node_info.metadata.name
             tmp_info['labels'] = node_info.metadata.labels
-            tmp_info['ip'] = node_info.metadata.annotations[
-                'projectcalico.org/IPv4Address'].split('/')[0]
+            tmp_info['ip'] = self.get_node_prior_ip_by_name(node_info.metadata.name)
             for condition in node_info.status.conditions:
                 if condition.type == 'Ready':
                     tmp_info['status'] = condition.status
@@ -213,11 +275,23 @@ class KubernetesApi(object):
         return [node.metadata.name for node in node_list.items] if \
             node_list.items else []
 
-    def get_node_list_by_label(self, label_selector):
+    def get_node_list_by_label_0(self, label_selector):
         nodes_info = self.corev1api.list_node(
             label_selector=label_selector
         )
         return nodes_info.items
+
+    def get_node_list_by_label(self, label_selector):
+        if not isinstance(label_selector, list):
+            label_selector = [label_selector]
+
+        node_list = []
+        for the_label_selector in label_selector:
+            nodes_info = self.corev1api.list_node(
+                label_selector=the_label_selector
+            )
+            node_list.extend(nodes_info.items)
+        return node_list
 
     def get_node_name_list_by_label(self, label_selector):
         node_list = self.get_node_list_by_label(label_selector)
@@ -235,13 +309,21 @@ class KubernetesApi(object):
 
     def get_node_ip_list_by_label(self, label_selector):
         node_ip_list = []
-        nodes_info = self.get_node_list_by_label(label_selector)
-        for node_info in nodes_info:
-            node_ip = node_info.metadata.annotations[
-                'projectcalico.org/IPv4Address'].split('/')[0]
+        node_name_list = self.get_node_name_list_by_label(label_selector)
+        for node_name in node_name_list:
+            node_ip = self.get_node_prior_ip_by_name(node_name)
             node_ip_list.append(node_ip)
 
         return node_ip_list
+
+    def get_node_ips_list_by_label(self, label_selector):
+        node_ips_list = []
+        node_name_list = self.get_node_name_list_by_label(label_selector)
+        for node_name in node_name_list:
+            node_ips = self.get_node_all_ips_by_name(node_name)
+            node_ips_list.append(node_ips)
+
+        return node_ips_list
 
     def get_node_ip_by_name(self, node_name, ip_type='ExternalIP'):
         node_data = self.corev1api.read_node(node_name)
@@ -254,7 +336,55 @@ class KubernetesApi(object):
     def get_node_ipv4_by_name(self, node_name):
         node_data = self.corev1api.read_node(node_name)
         node_annotations = node_data.metadata.annotations
+        if 'projectcalico.org/IPv4Address' not in node_annotations:
+            return None
         return node_annotations['projectcalico.org/IPv4Address'].split('/')[0]
+
+    def get_node_prior_ip_by_name(self, node_name):
+        """
+        Get the node ip by name, prior is:
+        ipv4 -> ExternalIP -> InternalIP
+        :param node_name:
+        :return:
+        """
+
+        prior_ip = self.get_node_ipv4_by_name(node_name)
+        if not prior_ip:
+            # Get ExternalIP
+            prior_ip = self.get_node_ip_by_name(node_name, ip_type='ExternalIP')
+        if not prior_ip:
+            # Get InternalIP
+            prior_ip = self.get_node_ip_by_name(node_name, ip_type='InternalIP')
+        if not prior_ip:
+            raise Exception('No vaild ip for node {0}'.format(node_name))
+        return prior_ip
+
+    def get_node_all_ips_by_name(self, node_name):
+        """
+        Get the node all ips by name:
+        ipv4 + ExternalIP + InternalIP
+        :param node_name:
+        :return:
+        """
+
+        node_ips = []
+
+        # Get IPV4
+        node_ipv4 = self.get_node_ipv4_by_name(node_name)
+        if node_ipv4:
+            node_ips.append(node_ipv4)
+
+        # Get ExternalIP
+        ext_ip = self.get_node_ip_by_name(node_name, ip_type='ExternalIP')
+        if ext_ip:
+            node_ips.append(ext_ip)
+
+        # Get InternalIP
+        inter_ip = self.get_node_ip_by_name(node_name, ip_type='InternalIP')
+        if inter_ip:
+            node_ips.append(inter_ip)
+
+        return node_ips
 
     def update_node_label(self, node_name, labels):
         p_node_data = self.corev1api.read_node(name=node_name)
@@ -272,7 +402,7 @@ class KubernetesApi(object):
                 }
             )
         else:
-            logger.warning('Try to add new label name, ignore!')
+            logger.warning('label {0} not exist, ignore!'.format(labels.keys()))
 
     def disable_node_label(self, node_name, label_name):
         self.update_node_label(node_name, labels={label_name: 'false'})
@@ -375,8 +505,8 @@ class KubernetesApi(object):
         )
 
     def set_replicas_for_deployment(self, deployment_name, replicas=0):
-        logger.info(
-            'Set {0} replicas={1} ...'.format(deployment_name, replicas))
+        logger.info('Set deployment {0} replicas={1} ...'.format(
+            deployment_name, replicas))
         self.appsv1betaapi.patch_namespaced_deployment(
             name=deployment_name,
             namespace=self.namespace,
@@ -447,7 +577,7 @@ class KubernetesApi(object):
         return json.loads(last_config)
 
     def set_replicas_for_stateful_set(self, sts_name, replicas=0):
-        logger.info('Set {0} replicas={1} ...'.format(sts_name, replicas))
+        logger.info('Set statefulset {0} replicas={1} ...'.format(sts_name, replicas))
         self.appsv1betaapi.patch_namespaced_stateful_set(
             name=sts_name,
             namespace=self.namespace,
@@ -653,7 +783,7 @@ class KubernetesApi(object):
                 pod_list.append(pod)
         return pod_list
 
-    def delete_pod(self, pod_name, grace_period_seconds=60):
+    def delete_pod(self, pod_name, grace_period_seconds=5184000):
         try:
             self.corev1api.delete_namespaced_pod(
                 namespace=self.namespace,
@@ -756,22 +886,25 @@ class KubernetesApi(object):
 
         for the_pod in pod_list:
             the_node_name = the_pod['spec']['node_name']
+            the_pod_name = the_pod['metadata']['name']
+            # the_pod_status = self.get_pod_status_by_name(the_pod_name)
+            the_pod_status = the_pod['status']['phase']
+
+            if the_pod_status == 'Pending':
+                raise Exception('Pod {0} status:Pending!'.format(the_pod_name))
             if node_name and the_node_name != node_name:
                 continue
-            the_pod_name = the_pod['metadata']['name']
+
             logger.info('> Check pod ready: {0} ({1})'.format(the_pod_name,
                                                               the_node_name))
             if the_pod and the_pod['status']['container_statuses']:
-                for container_status in the_pod['status'][
-                    'container_statuses']:
+                for container_status in the_pod['status']['container_statuses']:
                     container_name = container_status['name']
                     if container_status['ready']:
                         logger.info('Pod {0} containers [{1}] ready!'.format(
                             the_pod_name, container_name))
                     else:
-                        raise Exception(
-                            'Pod {0} containers [{1}] not ready!'.format(
-                                the_pod_name, container_name))
+                        raise Exception('Pod {0} containers [{1}] not ready!'.format(the_pod_name, container_name))
             else:
                 raise Exception(
                     'Pod {0} containers not ready!'.format(the_pod_name))
@@ -784,6 +917,9 @@ class KubernetesApi(object):
             if node_name and the_pod['spec']['node_name'] != node_name:
                 continue
             pod_name = the_pod['metadata']['name']
+            pod_status = self.get_pod_status_by_name(pod_name)
+            if pod_status.status.phase == 'Pending':
+                continue
             raise Exception('Pod {0} not down!'.format(pod_name))
 
         return True
@@ -803,8 +939,8 @@ class KubernetesApi(object):
         assert pod_name or pod_name_startswith
 
         all_info = self.corev1api.list_namespaced_pod(namespace=self.namespace)
-        for p_info in all_info.items:
-            p_name = p_info.metadata.name
+        for p_info in all_info.to_dict()['items']:
+            p_name = p_info['metadata']['name']
             if pod_name:
                 if p_name != pod_name:
                     continue
@@ -816,14 +952,18 @@ class KubernetesApi(object):
             if origin_pod_name_list and p_name in origin_pod_name_list:
                 continue
 
-            host_ip = p_info['host_ip']
-            if p_info['status'] != 'Running' or \
-                    not p_info['containers'][0]['ready']:
-                logger.warning('Wait pod {0} on {1} start.'.format(p_name, host_ip))
-                raise Exception('Pod {0} is not ready'.format(p_name))
+            if p_info['status']['container_statuses']:
+                for container_status in p_info['status']['container_statuses']:
+                    container_name = container_status['name']
+                    if container_status['ready']:
+                        logger.info('Pod {0} containers [{1}] ready!'.format(
+                            p_name, container_name))
+                    else:
+                        raise Exception('Pod {0} containers [{1}] not ready!'.format(p_name, container_name))
             else:
-                logger.info('Pod {0} on {1} is ready.'.format(p_name, host_ip))
-                return True
+                raise Exception('Pod {0} containers not ready!'.format(p_name))
+            return True
+
         else:
             if pod_name:
                 logger.error('Not found the pod name {}!'.format(pod_name))
@@ -911,10 +1051,34 @@ class KubernetesApi(object):
             elif service_info.spec._type == 'LoadBalancer':
                 for ingress in service_info.status._load_balancer.ingress:
                     svc_external_ips.append(ingress.ip)
+            elif service_info.spec._type == 'NodePort':
+                if service_info.spec._external_i_ps:
+                    svc_external_ips = service_info.spec._external_i_ps
+                else:
+                    svc_external_ips = [node['ip'] for node in self.nodes_info]
             else:
                 svc_external_ips = []
 
         return svc_external_ips
+
+    def get_service_port_by_target_port(self, svc_name, target_port):
+        try:
+            service_info = self.get_service_info_by_name(svc_name).to_dict()
+        except Exception as e:
+            logger.warning("FAIL: Get svc {0}!\n{1}".format(svc_name, e))
+        else:
+            port_info_list = service_info['spec']['ports']
+
+            if not target_port:
+                target_port = port_info_list[0]['target_port']
+
+            if service_info['spec']['type'] == 'NodePort':
+                for port_info in port_info_list:
+                    if port_info['target_port'] == target_port:
+                        return port_info['node_port']
+            else:
+                return target_port
+        return None
 
     def set_service_external_ips(self, service_name, external_ips):
         """
@@ -1058,6 +1222,12 @@ class KubernetesApi(object):
                 'data': previous_data
             }
         )
+
+    # ============ PVC ============
+    def get_pvc_info_by_name(self, pvc_name):
+        pvc_info = self.corev1api.read_namespaced_persistent_volume_claim(
+            pvc_name, self.namespace).to_dict()
+        return pvc_info
 
 
 if __name__ == '__main__':
