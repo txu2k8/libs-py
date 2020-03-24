@@ -10,9 +10,9 @@ FYI: https://elasticsearch-py.readthedocs.io/en/master/api.html
 
 import sys
 import json
+from functools import wraps
 from elasticsearch import Elasticsearch
 from elasticsearch import ElasticsearchException
-from elasticsearch.client.utils import query_params
 from elasticsearch.helpers import streaming_bulk
 from elasticsearch.serializer import JSONSerializer
 
@@ -31,8 +31,26 @@ else:
 # --- Global
 # =============================
 logger = log.get_logger()
-ES_CONN_TIMEOUT = 300
+ES_CONN_TIMEOUT = 36000
 ES_OPERATION_TIMEOUT = '60m'
+
+
+# print the func Enter/Output info
+def print_for_call(func):
+    """
+    Enter <func>.
+    Exit from <func>. result: "rtn"
+    """
+
+    @wraps(func)
+    def _wrapped(*args, **kwargs):
+        logger.info('Enter {name}.'.format(name=func.__name__))
+        rtn = func(*args, **kwargs)
+        logger.info('Exit from {name}. result: {rtn_code}'.format(
+            name=func.__name__, rtn_code=rtn))
+        return rtn
+
+    return _wrapped
 
 
 class CustomerJSONSerializer(JSONSerializer):
@@ -350,7 +368,7 @@ class ESApi(object):
         """
 
         if self.is_index_exists(index_name):
-            logger.debug('{0} already exist! skip create new')
+            logger.debug('{0} already exist! skip create new'.format(index_name))
             return True
 
         logger.info("Creating index {0} {1}".format(index_name, body))
@@ -366,6 +384,7 @@ class ESApi(object):
             `_all` or `*` string to delete all indices
         :return:
         """
+        logger.info("Delete indices:{0} ...".format(index_name))
         return self.conn.indices.delete(index_name, allow_no_indices=True)
 
     def flush_index(self, index_name='_all'):
@@ -536,6 +555,7 @@ class ESApi(object):
             or `persistent` (survives cluster restart).
         :return:
         """
+        logger.info('PUT Settings:{0}'.format(body))
         return self.conn.cluster.put_settings(body)
 
     def cluster_allocation_explain(self, body=None, include_disk_info=True):
@@ -561,6 +581,7 @@ class ESApi(object):
     # ===============
     @property
     def ping(self):
+        """Returns whether the cluster is running"""
         return self.conn.ping()
 
     @property
@@ -606,11 +627,30 @@ class ESApi(object):
         return node_ips
 
     @property
+    def es_nodes(self):
+        # todo: del
+        return self.node_ips
+
+    @property
     def master_node_ips(self):
         node_list = self.conn.cat.master().strip().split('\n')
         print(node_list)
         node_ips = [node.split()[2] for node in node_list]
         return node_ips
+
+    @property
+    def indices_names(self):
+        indices_names = []
+        for indices in self.conn.cat.indices().strip().split('\n'):
+            indices_info = indices.split()
+            if len(indices_info) > 3:
+                indices_names.append(indices_info[2])
+        return indices_names
+
+    @property
+    def es_cluster_health(self):
+        """Returns a concise representation of the cluster health."""
+        return self.conn.cat.health().split()[3]
 
     def cat_aliases(self, alias_name):
         """
@@ -757,7 +797,12 @@ class ESApi(object):
         :param repository:A repository name
         :return:
         """
-        return self.conn.snapshot.get_repository(repository, local=False)
+        try:
+            repo = self.conn.snapshot.get_repository(repository, local=False)
+            return repo
+        except ElasticsearchException as e:
+            logger.error(e)
+            return None
 
     def verify_repository(self, repository):
         """
@@ -838,7 +883,61 @@ class ESApi(object):
             repository, snap_name, body, wait_for_completion=True
         )
 
+    # ===============
+    # Check
+    # user-defined
+    # ===============
+    @print_for_call
+    def is_index_green(self, index_name=None):
+        """
+        Check is the index list green
+        :param index_name: A string or list of index names,
+            will check all exist indices if None
+        :return:
+        """
+        if not self.ping:
+            raise Exception('The es cluster is not running(PING FAILED)!')
+
+        index_name_list = index_name if isinstance(index_name, list) else [
+            index_name]
+        cold_nodes_num = len(self.nodes) - len(self.master_nodes)
+        for index_name in index_name_list:
+            index_info_list = self.cat_indices(index_name=index_name)
+            for index_info in index_info_list:
+                index = index_info['index']
+                index_health = index_info['health']
+                if cold_nodes_num > 2 and index_health != 'green':
+                    logger.warning(json.dumps(index_info, indent=4))
+                    raise Exception('Index {0} Not OK:{1}'.format(index, index_health))
+                elif index_health not in ['yellow', 'green']:
+                    logger.warning(json.dumps(index_info, indent=4))
+                    allocation_explain = self.cluster_allocation_explain()
+                    if 'index' in allocation_explain and allocation_explain['index'] == index:
+                        logger.warning(allocation_explain['unassigned_info']['details'])
+                    raise Exception('Index {0} Not OK:{1}'.format(index, index_health))
+                else:
+                    logger.debug(json.dumps(index_info, indent=4))
+                    logger.info('Index {0} OK:{1}'.format(index, index_health))
+        return True
+
+    @print_for_call
+    def is_cluster_ok(self):
+        """Check the cluster health"""
+        if not self.ping:
+            raise Exception('The es cluster is not running(PING FAILED)!')
+
+        cluster_health = self.es_cluster_health
+        if 'red' in cluster_health:
+            raise Exception('ES Cluster health: red')
+        else:
+            cold_nodes_num = len(self.nodes) - len(self.master_nodes)
+            if cold_nodes_num > 2 and 'yellow' in cluster_health:
+                raise Exception('ES Cluster:3 health: yellow')
+            else:
+                logger.info('ES Cluster OK:{0}'.format(cluster_health))
+        return True
+
 
 if __name__ == '__main__':
     es_api = ESApi('10.25.119.71', 30707, 'root', 'password')
-    print(es_api.get_cluster_health(None))
+    print(es_api.cat_indices('index-8'))

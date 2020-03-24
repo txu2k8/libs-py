@@ -79,6 +79,7 @@ class S3Obj(object):
 
         self.s3_client = self.get_s3_client()
         self.s3_transfer = self.get_s3_transfer()
+        # self.s3_resource = self.get_s3_resource()
 
     @retry(tries=3, delay=3)
     def get_s3_client(self):
@@ -89,6 +90,7 @@ class S3Obj(object):
                 id=self.aws_secret_access_key)
             )
             config = Config(connect_timeout=60, read_timeout=300)
+            # , s3={'addressing_style':'path'}
             s3_client = boto3.client(
                 's3', self.region_name, self.api_version,
                 self.use_ssl, self.verify, self.endpoint_url,
@@ -115,6 +117,25 @@ class S3Obj(object):
         except Exception as e:
             raise Exception(e)
 
+    @retry(tries=3, delay=3)
+    def get_s3_resource(self):
+        try:
+            logger.info("Init s3 resource {url}(key:{key},id:{id})".format(
+                url=self.endpoint_url,
+                key=self.aws_access_key_id,
+                id=self.aws_secret_access_key)
+            )
+            config = Config(connect_timeout=60, read_timeout=300)
+            s3_resource = boto3.resource(
+                's3', self.region_name, self.api_version,
+                self.use_ssl, self.verify, self.endpoint_url,
+                self.aws_access_key_id, self.aws_secret_access_key,
+                self.aws_session_token, config
+            )
+            return s3_resource
+        except Exception as e:
+            raise Exception(e)
+
     @retry(tries=25, delay=30)
     def list_buckets(self):
         """ Retrieve the list of existing buckets """
@@ -128,11 +149,11 @@ class S3Obj(object):
         return bucket_list
 
     @retry(tries=25, delay=30)
-    def list_files(self, bucket):
+    def list_files(self, bucket, prefix=''):
         """List some or all (up to 1000) of the objects in a bucket"""
         files_info = {}
         try:
-            response = self.s3_client.list_objects_v2(Bucket=bucket)
+            response = self.s3_client.list_objects_v2(Bucket=bucket, Prefix=prefix)
             if 'Contents' not in response:
                 return files_info
             for f_info in response['Contents']:
@@ -212,6 +233,35 @@ class S3Obj(object):
             else:
                 raise Exception('FAIL: Delete files from {0}, rc={1}!'.format(
                     bucket, status_code))
+            return True
+        except Exception as e:
+            raise Exception(e)
+
+    @retry(tries=25, delay=30)
+    def delete_path(self, bucket, path=''):
+        logger.info("S3 Delete path {0}/{1}".format(bucket, path))
+
+        # s3_resource = self.get_s3_resource()
+        # bucket_obj = s3_resource.Bucket(bucket)
+        # print(list(bucket_obj.objects.filter(Prefix=path)))
+        # bucket_obj.objects.filter(Prefix=path).delete()
+
+        delete_info = {'Objects': []}
+        for f_key in self.list_files(bucket, path).keys():
+            delete_info['Objects'].append({'Key': f_key})
+        if not delete_info['Objects']:
+            logger.warning("No file in path {0}/{1}".format(bucket, path))
+            return True
+
+        try:
+            response = self.s3_client.delete_objects(Bucket=bucket,
+                                                     Delete=delete_info)
+            status_code = response['ResponseMetadata']['HTTPStatusCode']
+            if status_code == 200:
+                logger.info('PASS: Delete files from {0}/{1}!'.format(bucket, path))
+            else:
+                raise Exception('FAIL: Delete files from {0}/{1}, '
+                                'rc={2}!'.format(bucket, path, status_code))
             return True
         except Exception as e:
             raise Exception(e)
@@ -742,3 +792,14 @@ class EC2Obj(object):
             else:
                 break
         return True
+
+
+if __name__ == "__main__":
+    bucket_name = 'bucket-west-2'
+    path_prefix = 'd1'
+    s3_obj = S3Obj('s3.amazonaws.com', 'IAIR6GZOQZYEN', 'qFngeZyXjymLKd')
+    # s3_obj.delete_path(bucket, path)
+    s3_resource = s3_obj.get_s3_resource()
+    bucket_obj = s3_resource.Bucket(bucket_name)
+    print(list(bucket_obj.objects.filter(Prefix=path_prefix)))
+    # bucket_obj.objects.filter(Prefix=path).delete()

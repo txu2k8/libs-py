@@ -714,6 +714,11 @@ class KubernetesApi(object):
             namespace=self.namespace
         )
 
+    def get_pod_volumes_by_name(self, pod_name):
+        pod_info = self.get_pod_info_by_name(pod_name).to_dict()
+        pod_volumes = pod_info['spec']['volumes']
+        return pod_volumes
+
     def get_pod_list_by_label(self, label_selector):
         """
         get pod list by label_selector
@@ -966,10 +971,12 @@ class KubernetesApi(object):
 
         else:
             if pod_name:
-                logger.error('Not found the pod name {}!'.format(pod_name))
+                raise Exception('Not found the pod name {}!'.format(pod_name))
+            elif pod_name_startswith:
+                raise Exception('Not found the pod name start with {}!'.format(pod_name_startswith))
             else:
-                logger.error('Not found the pod name start with {}!'.format(pod_name_startswith))
-            return False
+                logger.error('args None: pod_name and pod_name_startswith')
+                return False
 
     def wait_pod_ready_by_startswith(self, pod_startswith):
         return self.wait_pod_ready(None, pod_startswith, None)
@@ -1072,7 +1079,8 @@ class KubernetesApi(object):
             if not target_port:
                 target_port = port_info_list[0]['target_port']
 
-            if service_info['spec']['type'] == 'NodePort':
+            if service_info['spec']['type'] == 'NodePort' and \
+                    not service_info['spec']['external_i_ps']:
                 for port_info in port_info_list:
                     if port_info['target_port'] == target_port:
                         return port_info['node_port']

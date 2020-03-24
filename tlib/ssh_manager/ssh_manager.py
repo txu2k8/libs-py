@@ -78,6 +78,16 @@ class SSHManager(object):
             else:
                 _ssh.connect(self.ip, self.port, self.username, self.password,
                              timeout=self.conn_timeout)
+            # _ssh.get_transport().set_keepalive(30)
+
+            # creat a conn to router using paramiko.SSHClient()
+            # _shell = _ssh.invoke_shell()  # to keep the session go on
+            # _shell.keep_this = _ssh
+            # conn.send("ls -lh\n")
+            # time.sleep(1)
+            # if conn.recv_ready():
+            #     output = conn.recv(65535)
+            #     print(output)
         except Exception as e:
             logger.warning('SSH Connect {0} fail!'.format(self.ip))
             self._ssh = None
@@ -93,7 +103,6 @@ class SSHManager(object):
         """
         Executes command and Returns (rc, output) tuple
         :param cmd_spec: Command to be executed
-        :param output: A flag for collecting STDOUT and STDERR of command execution
         :param timeout
         :param docker_image:
         :param docker_args:
@@ -155,24 +164,20 @@ class SSHManager(object):
 
         logger.info('Execute: ssh {0}@{1}# {2}'.format(self.username, self.ip,
                                                        cmd_spec))
+        if sudo and self.password and not self.key_file:
+            stdin, stdout, stderr = self.ssh.exec_command(
+                cmd_spec, get_pty=True, timeout=timeout)
+            stdin.write(self.password + '\n')
+            stdin.flush()
+        else:
+            stdin, stdout, stderr = self.ssh.exec_command(
+                cmd_spec, get_pty=get_pty, timeout=timeout)
+            stdin.write('\n')
+            stdin.flush()
 
-        try:
-            if sudo and (self.password or self.key_file):
-                w_pwd = '' if self.key_file else self.password
-                stdin, stdout, stderr = self.ssh.exec_command(
-                    cmd_spec, get_pty=True, timeout=timeout)
-                stdin.write(w_pwd + '\n')
-                stdin.flush()
-            else:
-                stdin, stdout, stderr = self.ssh.exec_command(
-                    cmd_spec, get_pty=get_pty, timeout=timeout)
-                stdin.write('\n')
-                stdin.flush()
-            std_out = stdout.read().decode('UTF-8', 'ignore')
-            std_err = stderr.read().decode('UTF-8', 'ignore')
-            return std_out, std_err
-        except Exception as e:
-            raise Exception('Failed to run: {0}\n{1}'.format(cmd_spec, e))
+        std_out = stdout.read().decode('UTF-8', 'ignore')
+        std_err = stderr.read().decode('UTF-8', 'ignore')
+        return std_out, std_err
 
     def ssh_cmd(self, cmd_spec, expected_rc=0, timeout=7200, get_pty=False,
                 docker_image=None, docker_args=DOCKER_ARGS, tries=3, delay=3):
@@ -284,14 +289,26 @@ class SSHManagerTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_1(self):
+    def atest_1(self):
         ssh_obj = SSHManager(ip='10.25.119.1', username='root',
                              password='password')
         rc, output = ssh_obj.ssh_cmd('pwd')
         logger.info(output)
-
+        time.sleep(5)
         rc, output = ssh_obj.ssh_cmd('ls')
         logger.info(output)
+
+    def test_2(self):
+        ssh_obj = SSHManager(ip='10.203.78.98', username='centos', password='password',
+                             key_file=r'C:\Users\user\txu\new-setup.pem')
+        cmd = "find {0} -maxdepth 1 -type d".format('/mnt/test/')
+        rc, output = ssh_obj.ssh_cmd(cmd)
+        dir_list = output.strip('\n').split('\n') if output else []
+        print(dir_list)
+        for dir_name in dir_list:
+            logger.info(dir_name)
+            rc, output = ssh_obj.ssh_cmd('rm -rf {0}/*'.format(dir_name))
+            logger.info(output)
 
 
 if __name__ == '__main__':

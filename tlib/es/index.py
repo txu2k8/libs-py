@@ -25,7 +25,10 @@ logger = log.get_logger()
 
 
 class ESIndex(ESApi):
-    """create an index with mappings and load all docs"""
+    """
+    create an index with mappings and load all docs
+    Override the docs_generator() method for customized docs contents
+    """
     def __init__(self, ip_list, port, user=None, password=None):
         super(ESIndex, self).__init__(ip_list, port, user, password)
         pass
@@ -33,7 +36,7 @@ class ESIndex(ESApi):
     @staticmethod
     def docs_generator(doc_count):
         """
-        documents generator
+        documents generator, This just an example
         :param doc_count:
         :return:
         """
@@ -72,36 +75,21 @@ class ESIndex(ESApi):
         return all([future.result() for future in as_completed(futures)])
 
     @util.print_for_call
-    @retry(tries=120, delay=30)
-    def is_index_green(self, index_name):
-        """
-        get is the index list green
-        :param index_name: A string or list of index names
-        :return:
-        """
-        index_name_list = index_name if isinstance(index_name, list) else [index_name]
-        for index_name in index_name_list:
-            index_info = self.cat_indices(index_name=index_name)[0]
-            if len(self.node_ips) > 2:
-                if 'green' not in index_info['health']:
-                    logger.warning(json.dumps(index_info, indent=4))
-                    raise Exception('Index {0} exception occured(Not green)'.format(index_name))
-            else:
-                if 'yellow' not in index_info['health'] and 'green' not in \
-                        index_info['health']:
-                    logger.warning(json.dumps(index_info, indent=4))
-                    cae = self.cluster_allocation_explain()
-                    if 'index' in self.cluster_allocation_explain and \
-                            cae['index'] == index_name:
-                        logger.warning(cae['unassigned_info']['details'])
-                    raise Exception('Index {0} exception occured(Not green/yellow)'.format(index_name))
-
-        # logger.info(json.dumps(index_info, indent=4))
-        return True
+    def multi_delete_indices(self, index_list, name_start=None):
+        pool = ThreadPoolExecutor(max_workers=100)
+        futures = []
+        for index in index_list:
+            if name_start and not index.startswith(name_start):
+                continue
+            futures.append(pool.submit(self.delete_index, index))
+        pool.shutdown()
+        future_result = [future.result() for future in as_completed(futures)]
+        result = False if False in future_result else True
+        return result
 
 
 if __name__ == "__main__":
-    from tlib.es.example_settings import CREATE_INDEX_BODY, random_doc
+    from tlib.es.example_settings import CREATE_INDEX_BODY
 
     es = ESIndex('10.25.119.71', 30707, 'root', 'password')
     index_names = es.multi_create_index('test', CREATE_INDEX_BODY, 3)
